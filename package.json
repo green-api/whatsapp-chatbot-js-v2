@@ -1,0 +1,53 @@
+{
+  "name": "@green-api/whatsapp-chatbot-js-v2",
+  "version": "0.1.0",
+  "description": "Modern WhatsApp Bot Framework for Node.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "clean": "rimraf dist",
+    "prebuild": "npm run clean",
+    "prepublishOnly": "npm run build",
+    "docs": "typedoc"
+  },
+  "keywords": [
+    "whatsapp",
+    "bot",
+    "api",
+    "framework",
+    "green-api",
+    "chat",
+    "messaging"
+  ],
+  "author": "GREEN API <support@green-api.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/green-api/whatsapp-bot.git"
+  },
+  "bugs": {
+    "url": "https://github.com/green-api/whatsapp-bot/issues"
+  },
+  "homepage": "https://github.com/green-api/whatsapp-bot#readme",
+  "dependencies": {
+    "@green-api/whatsapp-api-client": "^0.4.3",
+    "debug": "^4.4.0"
+  },
+  "devDependencies": {
+    "@types/debug": "^4.1.12",
+    "@types/node": "^20.4.4",
+    "rimraf": "^6.0.1",
+    "tsx": "^4.19.2",
+    "typedoc": "^0.27.6",
+    "typedoc-plugin-markdown": "^4.4.1",
+    "typescript": "^5.1.6"
+  },
+  "files": [
+    "dist/**/*"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
