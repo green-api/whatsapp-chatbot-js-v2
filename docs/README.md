@@ -1,3 +1,7 @@
+**WhatsApp Bot Framework**
+
+***
+
 # WhatsApp Bot Library
 
 A modern, state-based WhatsApp bot library for Node.js built on top of GREEN-API.
@@ -483,12 +487,12 @@ await bot.sendFile(chatId, {
 
 ### Support Ticket Bot
 
-See [`examples/tickets.ts`](./examples/tickets.ts) for a complete example of a support ticket system demonstrating state
+See [`examples/tickets.ts`](_media/tickets.ts) for a complete example of a support ticket system demonstrating state
 management, file handling, and complex conversation flows.
 
 ### Custom Storage Implementation
 
-Check [`examples/custom-storage/`](./examples/custom-storage/custom-storage-example.ts) for an example of implementing a
+Check [`examples/custom-storage/`](_media/custom-storage-example.ts) for an example of implementing a
 custom storage provider
 with a simple bot implementation.
 

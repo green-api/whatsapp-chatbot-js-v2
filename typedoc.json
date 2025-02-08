@@ -3,18 +3,23 @@
     "src/index.ts"
   ],
   "out": "docs",
-  "includes": "./src",
+  "name": "WhatsApp Bot Framework",
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "plugin": [
+    "typedoc-plugin-markdown"
+  ],
+  "theme": "default",
   "exclude": [
     "**/node_modules/**",
     "**/*.spec.ts"
   ],
-  "theme": "default",
-  "name": "WhatsApp Bot Framework",
-  "excludePrivate": true,
-  "excludeInternal": false,
   "readme": "README.md",
-  "plugin": [
-    "typedoc-plugin-markdown"
-  ],
-  "githubPages": false
+  "categorizeByGroup": true,
+  "navigationLinks": {
+    "Table of Contents": "/"
+  },
+  "sidebarLinks": {
+    "API Documentation": "modules"
+  }
 }

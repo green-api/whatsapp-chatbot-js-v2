@@ -9,7 +9,7 @@ import {
 	StorageAdapter,
 } from "./types";
 import { MemoryStorage } from "./storage/memory";
-import { parseMessage } from "./handlers/message-parser";
+import { parseMessage } from "./parser/message-parser";
 import debugFactory from "debug";
 
 const debug = debugFactory("@green-api/whatsapp-bot");

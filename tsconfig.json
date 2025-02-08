@@ -19,7 +19,8 @@
     }
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "LICENSE"
   ],
   "exclude": [
     "node_modules",
