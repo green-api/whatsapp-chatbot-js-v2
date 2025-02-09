@@ -6,7 +6,7 @@
 
 # Interface: SessionData\<T\>
 
-Defined in: [types/index.ts:52](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3380234d497abd1709008132b7d2cae4528def0f/src/types/index.ts#L52)
+Defined in: [types/index.ts:61](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/types/index.ts#L61)
 
 Session data structure for maintaining state between messages.
 
@@ -22,7 +22,7 @@ Type of custom state data
 
 > `optional` **currentState**: `string`
 
-Defined in: [types/index.ts:56](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3380234d497abd1709008132b7d2cae4528def0f/src/types/index.ts#L56)
+Defined in: [types/index.ts:65](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/types/index.ts#L65)
 
 Current state name
 
@@ -32,7 +32,7 @@ Current state name
 
 > **lastActivity**: `number`
 
-Defined in: [types/index.ts:54](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3380234d497abd1709008132b7d2cae4528def0f/src/types/index.ts#L54)
+Defined in: [types/index.ts:63](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/types/index.ts#L63)
 
 Timestamp of last activity
 
@@ -42,7 +42,7 @@ Timestamp of last activity
 
 > `optional` **navigationPath**: `string`[]
 
-Defined in: [types/index.ts:60](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3380234d497abd1709008132b7d2cae4528def0f/src/types/index.ts#L60)
+Defined in: [types/index.ts:69](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/types/index.ts#L69)
 
 History of state transitions
 
@@ -52,7 +52,7 @@ History of state transitions
 
 > `optional` **previousState**: `string`
 
-Defined in: [types/index.ts:62](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3380234d497abd1709008132b7d2cae4528def0f/src/types/index.ts#L62)
+Defined in: [types/index.ts:71](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/types/index.ts#L71)
 
 Previous state name for back navigation
 
@@ -62,6 +62,6 @@ Previous state name for back navigation
 
 > `optional` **stateData**: `T`
 
-Defined in: [types/index.ts:58](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3380234d497abd1709008132b7d2cae4528def0f/src/types/index.ts#L58)
+Defined in: [types/index.ts:67](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/types/index.ts#L67)
 
 Custom state data

@@ -6,7 +6,7 @@
 
 # Class: MemoryStorage\<T\>
 
-Defined in: [storage/memory.ts:21](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3380234d497abd1709008132b7d2cae4528def0f/src/storage/memory.ts#L21)
+Defined in: [storage/memory.ts:21](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/storage/memory.ts#L21)
 
 In-memory implementation of the StorageAdapter interface.
 Provides temporary session storage with automatic cleanup of expired sessions.
@@ -40,7 +40,7 @@ Type of custom state data to be stored in sessions
 
 > **new MemoryStorage**\<`T`\>(`timeoutMinutes`): [`MemoryStorage`](MemoryStorage.md)\<`T`\>
 
-Defined in: [storage/memory.ts:33](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3380234d497abd1709008132b7d2cae4528def0f/src/storage/memory.ts#L33)
+Defined in: [storage/memory.ts:33](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/storage/memory.ts#L33)
 
 Creates a new instance of MemoryStorage.
 
@@ -62,7 +62,7 @@ Number of minutes after which inactive sessions are removed
 
 > **get**(`chatId`): `Promise`\<`null` \| [`SessionData`](../interfaces/SessionData.md)\<`T`\>\>
 
-Defined in: [storage/memory.ts:80](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3380234d497abd1709008132b7d2cae4528def0f/src/storage/memory.ts#L80)
+Defined in: [storage/memory.ts:80](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/storage/memory.ts#L80)
 
 Retrieves session data for the specified chat ID.
 
@@ -90,7 +90,7 @@ The session data if found, null otherwise
 
 > **set**(`chatId`, `data`): `Promise`\<`void`\>
 
-Defined in: [storage/memory.ts:91](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3380234d497abd1709008132b7d2cae4528def0f/src/storage/memory.ts#L91)
+Defined in: [storage/memory.ts:91](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/storage/memory.ts#L91)
 
 Stores session data for the specified chat ID.
 If data already exists for this chat ID, it will be overwritten.
@@ -123,7 +123,7 @@ The session data to store
 
 > **stopCleanup**(): `void`
 
-Defined in: [storage/memory.ts:67](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3380234d497abd1709008132b7d2cae4528def0f/src/storage/memory.ts#L67)
+Defined in: [storage/memory.ts:67](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/storage/memory.ts#L67)
 
 Stops the automatic cleanup of expired sessions.
 Should be called when the storage is no longer needed to prevent memory leaks.

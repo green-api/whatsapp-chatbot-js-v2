@@ -6,7 +6,7 @@
 
 # Interface: Message
 
-Defined in: [types/index.ts:26](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3380234d497abd1709008132b7d2cae4528def0f/src/types/index.ts#L26)
+Defined in: [types/index.ts:26](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/types/index.ts#L26)
 
 Represents a normalized message from WhatsApp.
 
@@ -16,7 +16,7 @@ Represents a normalized message from WhatsApp.
 
 > **chatId**: `string`
 
-Defined in: [types/index.ts:32](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3380234d497abd1709008132b7d2cae4528def0f/src/types/index.ts#L32)
+Defined in: [types/index.ts:32](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/types/index.ts#L32)
 
 Unique chat identifier
 
@@ -26,7 +26,7 @@ Unique chat identifier
 
 > `optional` **media**: `object`
 
-Defined in: [types/index.ts:40](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3380234d497abd1709008132b7d2cae4528def0f/src/types/index.ts#L40)
+Defined in: [types/index.ts:40](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/types/index.ts#L40)
 
 Media information if present
 
@@ -48,9 +48,33 @@ URL to download the media
 
 > **messageId**: `string`
 
-Defined in: [types/index.ts:34](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3380234d497abd1709008132b7d2cae4528def0f/src/types/index.ts#L34)
+Defined in: [types/index.ts:34](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/types/index.ts#L34)
 
 Unique message identifier
+
+***
+
+### pollUpdate?
+
+> `optional` **pollUpdate**: `object`
+
+Defined in: [types/index.ts:46](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/types/index.ts#L46)
+
+#### multipleAnswers
+
+> **multipleAnswers**: `boolean`
+
+#### name
+
+> **name**: `string`
+
+#### stanzaId
+
+> **stanzaId**: `string`
+
+#### votes
+
+> **votes**: `object`[]
 
 ***
 
@@ -58,7 +82,7 @@ Unique message identifier
 
 > **senderName**: `string`
 
-Defined in: [types/index.ts:38](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3380234d497abd1709008132b7d2cae4528def0f/src/types/index.ts#L38)
+Defined in: [types/index.ts:38](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/types/index.ts#L38)
 
 Name of the message sender
 
@@ -68,7 +92,7 @@ Name of the message sender
 
 > `optional` **text**: `string`
 
-Defined in: [types/index.ts:30](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3380234d497abd1709008132b7d2cae4528def0f/src/types/index.ts#L30)
+Defined in: [types/index.ts:30](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/types/index.ts#L30)
 
 Text content if present
 
@@ -78,7 +102,7 @@ Text content if present
 
 > **timestamp**: `number`
 
-Defined in: [types/index.ts:36](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3380234d497abd1709008132b7d2cae4528def0f/src/types/index.ts#L36)
+Defined in: [types/index.ts:36](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/types/index.ts#L36)
 
 Message timestamp
 
@@ -88,6 +112,6 @@ Message timestamp
 
 > **type**: [`MessageType`](../type-aliases/MessageType.md)
 
-Defined in: [types/index.ts:28](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3380234d497abd1709008132b7d2cae4528def0f/src/types/index.ts#L28)
+Defined in: [types/index.ts:28](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/types/index.ts#L28)
 
 Type of the message

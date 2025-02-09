@@ -8,7 +8,7 @@
 
 > **MessageHandler**\<`T`\>: (`message`, `session`) => `Promise`\<`void`\>
 
-Defined in: [types/index.ts:72](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3380234d497abd1709008132b7d2cae4528def0f/src/types/index.ts#L72)
+Defined in: [types/index.ts:90](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/types/index.ts#L90)
 
 Function type for handling messages.
 

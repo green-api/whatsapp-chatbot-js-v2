@@ -6,7 +6,7 @@
 
 # Interface: StorageAdapter\<T\>
 
-Defined in: [types/index.ts:128](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3380234d497abd1709008132b7d2cae4528def0f/src/types/index.ts#L128)
+Defined in: [types/index.ts:146](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/types/index.ts#L146)
 
 Interface for implementing custom storage solutions.
 
@@ -22,7 +22,7 @@ Type of custom state data
 
 > **get**(`chatId`): `Promise`\<`null` \| [`SessionData`](SessionData.md)\<`T`\>\>
 
-Defined in: [types/index.ts:130](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3380234d497abd1709008132b7d2cae4528def0f/src/types/index.ts#L130)
+Defined in: [types/index.ts:148](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/types/index.ts#L148)
 
 Retrieves session data for a chat
 
@@ -42,7 +42,7 @@ Retrieves session data for a chat
 
 > **set**(`chatId`, `data`): `Promise`\<`void`\>
 
-Defined in: [types/index.ts:133](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3380234d497abd1709008132b7d2cae4528def0f/src/types/index.ts#L133)
+Defined in: [types/index.ts:151](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/types/index.ts#L151)
 
 Stores session data for a chat
 

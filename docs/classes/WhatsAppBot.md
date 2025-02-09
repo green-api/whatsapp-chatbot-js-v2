@@ -6,7 +6,7 @@
 
 # Class: WhatsAppBot\<T\>
 
-Defined in: [whatsapp-bot.ts:42](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3380234d497abd1709008132b7d2cae4528def0f/src/whatsapp-bot.ts#L42)
+Defined in: [whatsapp-bot.ts:37](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/whatsapp-bot.ts#L37)
 
 Main WhatsApp bot class that handles message processing, state management, and message routing.
 
@@ -43,7 +43,7 @@ Type of custom state data stored in sessions
 
 > **new WhatsAppBot**\<`T`\>(`config`): [`WhatsAppBot`](WhatsAppBot.md)\<`T`\>
 
-Defined in: [whatsapp-bot.ts:70](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3380234d497abd1709008132b7d2cae4528def0f/src/whatsapp-bot.ts#L70)
+Defined in: [whatsapp-bot.ts:66](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/whatsapp-bot.ts#L66)
 
 Creates a new WhatsApp bot instance.
 
@@ -65,9 +65,17 @@ Bot configuration options
 
 > **api**: `API`
 
-Defined in: [whatsapp-bot.ts:44](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3380234d497abd1709008132b7d2cae4528def0f/src/whatsapp-bot.ts#L44)
+Defined in: [whatsapp-bot.ts:39](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/whatsapp-bot.ts#L39)
 
 Green API client instance
+
+***
+
+### wid?
+
+> `optional` **wid**: `string`
+
+Defined in: [whatsapp-bot.ts:59](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/whatsapp-bot.ts#L59)
 
 ## Methods
 
@@ -75,7 +83,7 @@ Green API client instance
 
 > **addState**(`state`): `this`
 
-Defined in: [whatsapp-bot.ts:106](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3380234d497abd1709008132b7d2cae4528def0f/src/whatsapp-bot.ts#L106)
+Defined in: [whatsapp-bot.ts:106](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/whatsapp-bot.ts#L106)
 
 Adds a new state to the bot.
 
@@ -99,7 +107,7 @@ This bot instance for chaining
 
 > **enterState**(`message`, `session`, `stateName`, `stateData`?, `skipOnEnter`?): `Promise`\<`void`\>
 
-Defined in: [whatsapp-bot.ts:124](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3380234d497abd1709008132b7d2cae4528def0f/src/whatsapp-bot.ts#L124)
+Defined in: [whatsapp-bot.ts:124](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/whatsapp-bot.ts#L124)
 
 Transitions to a new state, handling state exit and entry logic.
 Processes state's onEnter function return values:
@@ -147,19 +155,19 @@ Whether to skip the onEnter handler
 
 ### onRegex()
 
-> **onRegex**(`pattern`, `handler`): `this`
+> **onRegex**(`patterns`, `handler`): `this`
 
-Defined in: [whatsapp-bot.ts:184](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3380234d497abd1709008132b7d2cae4528def0f/src/whatsapp-bot.ts#L184)
+Defined in: [whatsapp-bot.ts:187](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/whatsapp-bot.ts#L187)
 
 Registers a handler for regex pattern matches.
 
 #### Parameters
 
-##### pattern
+##### patterns
 
-`RegExp`
+Regular expression(s) to match against message text
 
-Regular expression to match against message text
+`RegExp` | `RegExp`[]
 
 ##### handler
 
@@ -179,7 +187,7 @@ This bot instance for chaining
 
 > **onText**(`text`, `handler`): `this`
 
-Defined in: [whatsapp-bot.ts:172](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3380234d497abd1709008132b7d2cae4528def0f/src/whatsapp-bot.ts#L172)
+Defined in: [whatsapp-bot.ts:172](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/whatsapp-bot.ts#L172)
 
 Registers a handler for exact text matches.
 
@@ -187,9 +195,9 @@ Registers a handler for exact text matches.
 
 ##### text
 
-`string`
+Text or array of texts to match (case-insensitive)
 
-Text to match (case-insensitive)
+`string` | `string`[]
 
 ##### handler
 
@@ -209,7 +217,7 @@ This bot instance for chaining
 
 > **onType**(`type`, `handler`): `this`
 
-Defined in: [whatsapp-bot.ts:196](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3380234d497abd1709008132b7d2cae4528def0f/src/whatsapp-bot.ts#L196)
+Defined in: [whatsapp-bot.ts:202](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/whatsapp-bot.ts#L202)
 
 Registers a handler for specific message types.
 
@@ -217,9 +225,9 @@ Registers a handler for specific message types.
 
 ##### type
 
-Message type to handle, or "*" for all types
+Message type(s) to handle, or "*" for all types
 
-[`MessageType`](../type-aliases/MessageType.md) | `"*"`
+[`MessageType`](../type-aliases/MessageType.md) | [`MessageType`](../type-aliases/MessageType.md)[] | `"*"`
 
 ##### handler
 
@@ -235,13 +243,101 @@ This bot instance for chaining
 
 ***
 
-### sendFile()
+### sendContact()
 
-> **sendFile**(`chatId`, `options`): `Promise`\<`any`\>
+> **sendContact**(`chatId`, `contact`): `Promise`\<`any`\>
 
-Defined in: [whatsapp-bot.ts:220](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3380234d497abd1709008132b7d2cae4528def0f/src/whatsapp-bot.ts#L220)
+Defined in: [whatsapp-bot.ts:260](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/whatsapp-bot.ts#L260)
 
-Sends a file message to a chat.
+Sends contact information to a chat.
+
+#### Parameters
+
+##### chatId
+
+`string`
+
+Target chat ID
+
+##### contact
+
+Contact information to send
+
+###### company
+
+`string`
+
+###### firstName
+
+`string`
+
+###### lastName
+
+`string`
+
+###### middleName
+
+`string`
+
+###### phoneContact
+
+`number`
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### sendFileByUpload()
+
+> **sendFileByUpload**(`chatId`, `options`): `Promise`\<`any`\>
+
+Defined in: [whatsapp-bot.ts:301](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/whatsapp-bot.ts#L301)
+
+Sends a file to a chat using file upload.
+
+#### Parameters
+
+##### chatId
+
+`string`
+
+Target chat ID
+
+##### options
+
+File upload options including file path, name and optional caption
+
+###### caption
+
+`string`
+
+###### fileName
+
+`string`
+
+###### filePath
+
+`string`
+
+###### quotedMessageId
+
+`string`
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### sendFileByUrl()
+
+> **sendFileByUrl**(`chatId`, `options`): `Promise`\<`any`\>
+
+Defined in: [whatsapp-bot.ts:286](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/whatsapp-bot.ts#L286)
+
+Sends a file by url to a chat.
 
 #### Parameters
 
@@ -259,9 +355,9 @@ File options including URL, type, and optional caption
 
 `string`
 
-###### type
+###### fileName
 
-`"image"` \| `"video"` \| `"document"` \| `"audio"`
+`string`
 
 ###### url
 
@@ -273,11 +369,95 @@ File options including URL, type, and optional caption
 
 ***
 
+### sendLocation()
+
+> **sendLocation**(`chatId`, `location`): `Promise`\<`any`\>
+
+Defined in: [whatsapp-bot.ts:332](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/whatsapp-bot.ts#L332)
+
+Sends a location message to a chat.
+
+#### Parameters
+
+##### chatId
+
+`string`
+
+Target chat ID
+
+##### location
+
+Location information
+
+###### address
+
+`string`
+
+###### latitude
+
+`number`
+
+###### longitude
+
+`number`
+
+###### name
+
+`string`
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### sendPoll()
+
+> **sendPoll**(`chatId`, `options`): `Promise`\<`any`\>
+
+Defined in: [whatsapp-bot.ts:236](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/whatsapp-bot.ts#L236)
+
+Sends a poll message to a chat.
+
+#### Parameters
+
+##### chatId
+
+`string`
+
+Target chat ID
+
+##### options
+
+Poll options including question and choices
+
+###### multipleAnswers
+
+`boolean`
+
+###### options
+
+`string`[]
+
+###### question
+
+`string`
+
+###### quotedMessageId
+
+`string`
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
 ### sendText()
 
-> **sendText**(`chatId`, `text`): `Promise`\<`any`\>
+> **sendText**(`chatId`, `text`, `options`?): `Promise`\<`any`\>
 
-Defined in: [whatsapp-bot.ts:209](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3380234d497abd1709008132b7d2cae4528def0f/src/whatsapp-bot.ts#L209)
+Defined in: [whatsapp-bot.ts:221](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/whatsapp-bot.ts#L221)
 
 Sends a text message to a chat.
 
@@ -295,6 +475,22 @@ Target chat ID
 
 Message text to send
 
+##### options?
+
+Additional options
+
+###### linkPreview
+
+`boolean`
+
+Whether to display link previews in the message. Defaults to true
+
+###### quotedMessageId
+
+`string`
+
+ID of the message to quote
+
 #### Returns
 
 `Promise`\<`any`\>
@@ -305,7 +501,7 @@ Message text to send
 
 > **start**(): `Promise`\<`void`\>
 
-Defined in: [whatsapp-bot.ts:233](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3380234d497abd1709008132b7d2cae4528def0f/src/whatsapp-bot.ts#L233)
+Defined in: [whatsapp-bot.ts:353](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/whatsapp-bot.ts#L353)
 
 Configures instance settings and starts the bot.
 Settings configuration may take several minutes to complete.
@@ -320,7 +516,7 @@ Settings configuration may take several minutes to complete.
 
 > **stop**(): `void`
 
-Defined in: [whatsapp-bot.ts:271](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3380234d497abd1709008132b7d2cae4528def0f/src/whatsapp-bot.ts#L271)
+Defined in: [whatsapp-bot.ts:408](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/whatsapp-bot.ts#L408)
 
 Stops the bot and cleans up resources.
 

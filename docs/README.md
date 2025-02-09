@@ -292,6 +292,37 @@ const bot = new WhatsAppBot({
     - If undefined: Stop processing
     - If state name/transition: Enter new state
 
+## Message Handling Priority
+
+Messages are processed in a specific priority order:
+
+1. **State Handler (First)**
+    - The current state's `onMessage` handler gets the first chance to process every message
+    - Based on its return value:
+        - `null`: Continue to global handlers
+        - `undefined`: Stop processing
+        - `string`: Transition to that state and stop
+        - `StateTransition`: Transition with data and stop
+
+2. **Global Handlers (Only if state handler returns null)**
+   Messages that aren't fully handled by the state (returned `null`) continue to global handlers in this order:
+
+   a. **Text Handlers**
+    - Exact text matches (case-insensitive)
+    - First matching handler processes the message and stops further handling
+
+   b. **Regex Handlers**
+    - Regular expression pattern matches
+    - First matching pattern processes the message and stops further handling
+
+   c. **Type Handlers**
+    - Specific type handlers run first
+    - Generic ("*") handlers run last as fallback
+    - First matching handler processes the message and stops further handling
+
+This means that if your state's `onMessage` handler returns `undefined` (the default return value), global handlers will
+never run. Make sure to return `null` if you want to allow global handlers to process the message.
+
 ## Global Handlers
 
 ### Text Handlers
@@ -487,14 +518,18 @@ await bot.sendFile(chatId, {
 
 ### Support Ticket Bot
 
-See [`examples/tickets.ts`](_media/tickets.ts) for a complete example of a support ticket system demonstrating state
+See `examples/tickets.ts` for a complete example of a support ticket system demonstrating state
 management, file handling, and complex conversation flows.
 
 ### Custom Storage Implementation
 
-Check [`examples/custom-storage/`](_media/custom-storage-example.ts) for an example of implementing a
-custom storage provider
+Check `examples/custom-storage/` for an example of implementing a custom storage provider
 with a simple bot implementation.
+
+### Demo chatbot example
+
+Check out [our demo chatbot](https://github.com/green-api/whatsapp-demo-chatbot-js-v2) to see a big scale
+implementation, based on GREEN-API
 
 ## License
 
