@@ -13,9 +13,9 @@ export interface BotConfig {
 	/** Session timeout in minutes */
 	sessionTimeout?: number;
 	/** Initial state name for new sessions */
-	defaultState?: string;
+	defaultState: string;
 	/** Command text to trigger back navigation */
-	backCommand?: string;
+	backCommands: string | string[];
 	/** Custom settings. If not provided, default settings are used */
 	settings?: Partial<Settings.Settings>;
 }
@@ -43,6 +43,15 @@ export interface Message {
 		/** Media caption if any */
 		caption?: string;
 	};
+	pollUpdate?: {
+		stanzaId: string;
+		name: string;
+		votes: Array<{
+			optionName: string;
+			optionVoters: string[];
+		}>;
+		multipleAnswers: boolean;
+	};
 }
 
 /**
@@ -63,7 +72,16 @@ export interface SessionData<T = any> {
 }
 
 /** Supported message types from WhatsApp */
-export type MessageType = "text" | "image" | "video" | "document" | "audio" | "location" | "contact";
+export type MessageType =
+	"text"
+	| "image"
+	| "video"
+	| "document"
+	| "audio"
+	| "location"
+	| "contact"
+	| "poll"
+	| "pollUpdate";
 
 /**
  * Function type for handling messages.

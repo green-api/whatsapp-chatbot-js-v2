@@ -9,7 +9,7 @@
     "watch": "tsc -w",
     "clean": "rimraf dist",
     "prebuild": "npm run clean",
-    "prepublishOnly": "npm run build",
+    "prepare": "npm run build",
     "docs": "typedoc"
   },
   "keywords": [
@@ -33,7 +33,8 @@
   "homepage": "https://github.com/green-api/whatsapp-bot#readme",
   "dependencies": {
     "@green-api/whatsapp-api-client": "^0.4.3",
-    "debug": "^4.4.0"
+    "debug": "^4.4.0",
+    "form-data": "^4.0.1"
   },
   "devDependencies": {
     "@types/debug": "^4.1.12",

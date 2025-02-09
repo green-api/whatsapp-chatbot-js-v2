@@ -1,16 +1,11 @@
-import { restAPI, API, WebhookResponse, Settings } from "@green-api/whatsapp-api-client";
-import {
-	BotConfig,
-	Message,
-	MessageType,
-	MessageHandler,
-	State,
-	SessionData,
-	StorageAdapter,
-} from "./types";
+import { API, restAPI, Settings, WebhookResponse } from "@green-api/whatsapp-api-client";
+import { BotConfig, Message, MessageHandler, MessageType, SessionData, State, StorageAdapter } from "./types";
 import { MemoryStorage } from "./storage/memory";
 import { parseMessage } from "./parser/message-parser";
 import debugFactory from "debug";
+import { formatAxiosError } from "./utils/utils";
+import * as fs from "node:fs";
+import FormData from "form-data";
 
 const debug = debugFactory("@green-api/whatsapp-bot");
 
@@ -59,8 +54,9 @@ export class WhatsAppBot<T = any> {
 	/** Default state name */
 	private readonly defaultState: string;
 	/** Command to trigger back navigation */
-	private readonly backCommand: string;
+	private readonly backCommands: string | string[];
 	private readonly settings: Partial<Settings.Settings>;
+	public wid?: string;
 
 	/**
 	 * Creates a new WhatsApp bot instance.
@@ -76,7 +72,9 @@ export class WhatsAppBot<T = any> {
 		this.storage = config.storage || new MemoryStorage<T>();
 		this.sessionTimeout = (config.sessionTimeout || 5) * 60000;
 		this.defaultState = config.defaultState || "root";
-		this.backCommand = config.backCommand || "back";
+		this.backCommands = Array.isArray(config.backCommands)
+			? config.backCommands
+			: [config.backCommands || "back"];
 		this.settings = config.settings || {
 			webhookUrl: "",
 			webhookUrlToken: "",
@@ -88,12 +86,14 @@ export class WhatsAppBot<T = any> {
 			pollMessageWebhook: "yes",
 		};
 
-		this.onText(this.backCommand, async (message, session) => {
-			if (session.previousState) {
-				await this.enterState(message, session, session.previousState);
-			} else {
-				await this.enterState(message, session, this.defaultState);
-			}
+		this.backCommands.forEach(command => {
+			this.onText(command, async (message, session) => {
+				if (session.previousState) {
+					await this.enterState(message, session, session.previousState);
+				} else {
+					await this.enterState(message, session, this.defaultState[0]);
+				}
+			});
 		});
 	}
 
@@ -165,38 +165,47 @@ export class WhatsAppBot<T = any> {
 	/**
 	 * Registers a handler for exact text matches.
 	 *
-	 * @param text - Text to match (case-insensitive)
+	 * @param text - Text or array of texts to match (case-insensitive)
 	 * @param handler - Handler function to call on match
 	 * @returns This bot instance for chaining
 	 */
-	onText(text: string, handler: MessageHandler<T>): this {
-		this.textHandlers.set(text.toLowerCase(), handler);
+	onText(text: string | string[], handler: MessageHandler<T>): this {
+		const texts = Array.isArray(text) ? text : [text];
+		texts.forEach(t => {
+			this.textHandlers.set(t.toLowerCase(), handler);
+		});
 		return this;
 	}
 
 	/**
 	 * Registers a handler for regex pattern matches.
 	 *
-	 * @param pattern - Regular expression to match against message text
+	 * @param patterns - Regular expression(s) to match against message text
 	 * @param handler - Handler function to call on match
 	 * @returns This bot instance for chaining
 	 */
-	onRegex(pattern: RegExp, handler: MessageHandler<T>): this {
-		this.regexHandlers.push({pattern, handler});
+	onRegex(patterns: RegExp | RegExp[], handler: MessageHandler<T>): this {
+		const regexPatterns = Array.isArray(patterns) ? patterns : [patterns];
+		regexPatterns.forEach(pattern => {
+			this.regexHandlers.push({pattern, handler});
+		});
 		return this;
 	}
 
 	/**
 	 * Registers a handler for specific message types.
 	 *
-	 * @param type - Message type to handle, or "*" for all types
+	 * @param type - Message type(s) to handle, or "*" for all types
 	 * @param handler - Handler function to call for matching messages
 	 * @returns This bot instance for chaining
 	 */
-	onType(type: MessageType | "*", handler: MessageHandler<T>): this {
-		const handlers = this.typeHandlers.get(type) || [];
-		handlers.push(handler);
-		this.typeHandlers.set(type, handlers);
+	onType(type: MessageType | MessageType[] | "*", handler: MessageHandler<T>): this {
+		const types = type === "*" ? ["*"] : (Array.isArray(type) ? type : [type]);
+		types.forEach(t => {
+			const handlers = this.typeHandlers.get(t) || [];
+			handlers.push(handler);
+			this.typeHandlers.set(t, handlers);
+		});
 		return this;
 	}
 
@@ -205,25 +214,136 @@ export class WhatsAppBot<T = any> {
 	 *
 	 * @param chatId - Target chat ID
 	 * @param text - Message text to send
+	 * @param options - Additional options
+	 * @param options.linkPreview - Whether to display link previews in the message. Defaults to true
+	 * @param options.quotedMessageId - ID of the message to quote
 	 */
-	async sendText(chatId: string, text: string): Promise<any> {
-		debug("Sending text", {chatId, text});
-		return this.api.message.sendMessage(chatId, null, text);
+	async sendText(chatId: string, text: string, options?: {
+		linkPreview?: boolean;
+		quotedMessageId?: string;
+	}): Promise<any> {
+		const linkPreview = options?.linkPreview ?? true;
+		debug("Sending text", {chatId, text, linkPreview, quotedMessageId: options?.quotedMessageId});
+		return this.api.message.sendMessage(chatId, null, text, options?.quotedMessageId, linkPreview);
 	}
 
 	/**
-	 * Sends a file message to a chat.
+	 * Sends a poll message to a chat.
+	 *
+	 * @param chatId - Target chat ID
+	 * @param options - Poll options including question and choices
+	 */
+	async sendPoll(chatId: string, options: {
+		question: string;
+		options: Array<string>;
+		multipleAnswers?: boolean;
+		quotedMessageId?: string;
+	}): Promise<any> {
+		debug("Sending poll", {chatId, options});
+		const formattedOptions = options.options.map(optionName => ({optionName}));
+		return this.api.message.sendPoll(
+			chatId,
+			null,
+			options.question,
+			formattedOptions,
+			options.multipleAnswers,
+			options.quotedMessageId,
+		);
+	}
+
+	/**
+	 * Sends contact information to a chat.
+	 *
+	 * @param chatId - Target chat ID
+	 * @param contact - Contact information to send
+	 */
+	async sendContact(chatId: string, contact: {
+		phoneContact: number;
+		firstName?: string;
+		lastName?: string;
+		company?: string;
+		middleName?: string;
+	}): Promise<any> {
+		debug("Sending contact", {chatId, contact});
+
+		const apiContact = {
+			phoneContact: contact.phoneContact,
+			firstName: contact.firstName ?? null,
+			lastName: contact.lastName ?? null,
+			company: contact.company ?? null,
+			middleName: contact.middleName ?? null,
+		};
+
+		return this.api.message.sendContact(chatId, null, apiContact);
+	}
+
+	/**
+	 * Sends a file by url to a chat.
 	 *
 	 * @param chatId - Target chat ID
 	 * @param options - File options including URL, type, and optional caption
 	 */
-	async sendFile(chatId: string, options: {
+	async sendFileByUrl(chatId: string, options: {
 		url: string;
-		type: "image" | "video" | "document" | "audio";
+		fileName: string;
 		caption?: string;
 	}): Promise<any> {
 		debug("Sending file", {chatId, options});
-		return this.api.file.sendFileByUrl(chatId, null, options.url, options.type, options.caption);
+		return this.api.file.sendFileByUrl(chatId, null, options.url, options.fileName, options.caption);
+	}
+
+	/**
+	 * Sends a file to a chat using file upload.
+	 *
+	 * @param chatId - Target chat ID
+	 * @param options - File upload options including file path, name and optional caption
+	 */
+	async sendFileByUpload(chatId: string, options: {
+		filePath: string;
+		fileName?: string;
+		caption?: string;
+		quotedMessageId?: string;
+	}): Promise<any> {
+		debug("Sending file by upload", {chatId, options});
+		const formData = new FormData();
+
+		formData.append("chatId", chatId);
+		formData.append("file", fs.createReadStream(options.filePath));
+
+		if (options.fileName) {
+			formData.append("fileName", options.fileName);
+		}
+		if (options.caption) {
+			formData.append("caption", options.caption);
+		}
+		if (options.quotedMessageId) {
+			formData.append("quotedMessageId", options.quotedMessageId);
+		}
+
+		return this.api.file.sendFileByUpload(formData as any);
+	}
+
+	/**
+	 * Sends a location message to a chat.
+	 *
+	 * @param chatId - Target chat ID
+	 * @param location - Location information
+	 */
+	async sendLocation(chatId: string, location: {
+		latitude: number;
+		longitude: number;
+		name?: string;
+		address?: string;
+	}): Promise<any> {
+		debug("Sending location", {chatId, location});
+		return this.api.message.sendLocation(
+			chatId,
+			null,
+			location.name || "",
+			location.address || "",
+			location.latitude,
+			location.longitude,
+		);
 	}
 
 	/**
@@ -236,11 +356,18 @@ export class WhatsAppBot<T = any> {
 		debug("Starting bot initialization");
 
 		try {
+			const settings = await this.api.settings.getSettings();
+			if (!settings.wid) {
+				throw new Error("Failed to get bot WID from settings");
+			}
+
+			this.wid = settings.wid;
 			await this.api.settings.setSettings(this.settings);
 			debug("Settings configuration initiated - they may take several minutes to apply");
 		} catch (error: any) {
-			debug("Error during settings configuration:", error);
-			throw new Error(`Failed to configure settings: ${error.message}`);
+			const formattedError = formatAxiosError(error);
+			debug("Error during settings configuration:", formattedError);
+			throw new Error(`Failed to configure settings: ${JSON.stringify(formattedError)}`);
 		}
 
 		this.isRunning = true;
@@ -249,19 +376,29 @@ export class WhatsAppBot<T = any> {
 		const RETRY_DELAY = 10000; // 10 seconds
 
 		while (this.isRunning) {
+			let notification = null;
+			let hadError = false;
+
 			try {
-				const notification = await this.api.webhookService.receiveNotification();
+				notification = await this.api.webhookService.receiveNotification();
 				if (notification) {
 					debug(notification);
 					await this.handleNotification(notification);
-					await this.api.webhookService.deleteNotification(notification.receiptId);
 				}
-
-				await new Promise(resolve => setTimeout(resolve, 100));
-			} catch (error) {
-				debug("Error receiving notifications, will retry in 10 seconds:", error);
-				await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+			} catch (error: any) {
+				hadError = true;
+				debug("Error while handling notifications, will retry in 10 seconds:", formatAxiosError(error));
+			} finally {
+				if (notification) {
+					try {
+						await this.api.webhookService.deleteNotification(notification.receiptId);
+					} catch (deleteError: any) {
+						debug("Failed to delete notification:", formatAxiosError(deleteError));
+					}
+				}
 			}
+
+			await new Promise(resolve => setTimeout(resolve, hadError ? RETRY_DELAY : 100));
 		}
 	}
 
@@ -342,12 +479,13 @@ export class WhatsAppBot<T = any> {
 			}
 
 			const typeHandlers = [
-				...(this.typeHandlers.get("*") || []),
 				...(this.typeHandlers.get(message.type) || []),
+				...(this.typeHandlers.get("*") || []),
 			];
 
-			for (const handler of typeHandlers) {
-				await handler(message, session);
+			if (typeHandlers.length > 0) {
+				await typeHandlers[0](message, session);
+				return;
 			}
 		}
 	}

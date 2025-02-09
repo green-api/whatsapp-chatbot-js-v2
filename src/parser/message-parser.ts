@@ -29,6 +29,13 @@ export function parseMessage(notification: WebhookResponse.MessageWebhook): Mess
 		message.text = messageData.textMessageData.textMessage;
 	} else if (messageData.typeMessage === "extendedTextMessage") {
 		message.text = messageData.extendedTextMessageData.text;
+	} else if (messageData.typeMessage === "pollUpdateMessage") {
+		message.pollUpdate = {
+			stanzaId: messageData.pollMessageData.stanzaId,
+			name: messageData.pollMessageData.name,
+			votes: messageData.pollMessageData.votes,
+			multipleAnswers: messageData.pollMessageData.multipleAnswers,
+		};
 	}
 
 	if ("fileMessageData" in messageData) {
@@ -64,6 +71,10 @@ function getMessageType(messageData: WebhookResponse.MessageData): MessageType {
 			return "location";
 		case "contactMessage":
 			return "contact";
+		case "pollMessage":
+			return "poll";
+		case "pollUpdateMessage":
+			return "pollUpdate";
 		default:
 			return "text";
 	}
