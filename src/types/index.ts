@@ -1,23 +1,29 @@
 import { Settings } from "@green-api/whatsapp-api-client";
+import { StorageEventEmitter } from "../storage/events";
 
 /**
  * Configuration options for initializing the WhatsApp bot.
+ * @typeParam T - Type of custom state data
  */
-export interface BotConfig {
+export interface BotConfig<T = any> {
 	/** Green API instance ID */
 	idInstance: string;
 	/** Green API instance token */
 	apiTokenInstance: string;
 	/** Custom storage adapter for session management */
 	storage?: StorageAdapter;
-	/** Session timeout in minutes */
+	/** Session timeout in seconds */
 	sessionTimeout?: number;
-	/** Initial state name for new sessions */
-	defaultState: string;
+	/** Function that returns timeout message based on session data */
+	getSessionTimeoutMessage?: (session: SessionData<T>) => string;
+	/** Initial state name for new sessions. Default: root. */
+	defaultState?: string;
 	/** Command text to trigger back navigation */
-	backCommands: string | string[];
+	backCommands?: string | string[];
 	/** Custom settings. If not provided, default settings are used */
 	settings?: Partial<Settings.Settings>;
+	/** Whether to clear webhook notification queue on bot startup. Default: false. */
+	clearWebhookQueueOnStart?: boolean;
 }
 
 /**
@@ -100,15 +106,8 @@ export interface StateTransition<T = any> {
 	data?: T;
 	/** Whether to skip the onEnter handler */
 	skipOnEnter?: boolean;
-}
-
-/**
- * State transition specifically for onEnter handlers.
- * @typeParam T - Type of custom state data
- */
-export interface OnEnterStateTransition<T = any> extends StateTransition<T> {
-	/** Whether to skip the onEnter handler */
-	skipOnEnter?: boolean;
+	/** Whether to continue processing the current message in onMessage after onEnter */
+	continueToOnMessage?: boolean;
 }
 
 /**
@@ -123,9 +122,9 @@ export interface State<T = any> {
 	 * Return values:
 	 * - void: Stay in state
 	 * - string: Transition to that state
-	 * - OnEnterStateTransition: Transition with data
+	 * - StateTransition: Transition with data
 	 */
-	onEnter?: (message: Message, stateData?: T) => Promise<void | string | OnEnterStateTransition<T>>;
+	onEnter?: (message: Message, stateData?: T) => Promise<void | string | StateTransition<T>>;
 	/**
 	 * Handler for processing messages in this state.
 	 * Return values:
@@ -144,9 +143,15 @@ export interface State<T = any> {
  * @typeParam T - Type of custom state data
  */
 export interface StorageAdapter<T = any> {
+	/** Optional event emitter for session-related events like expiration */
+	events?: StorageEventEmitter<T>;
+
 	/** Retrieves session data for a chat */
 	get(chatId: string): Promise<SessionData<T> | null>;
 
 	/** Stores session data for a chat */
 	set(chatId: string, data: SessionData<T>): Promise<void>;
+
+	/** Optional method to receive session timeout value for cleanup processes */
+	setSessionTimeout?(timeoutMs: number): void;
 }

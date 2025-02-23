@@ -1,4 +1,5 @@
 import { StorageAdapter, SessionData } from "../types";
+import { StorageEventEmitter } from "./events";
 
 /**
  * In-memory implementation of the StorageAdapter interface.
@@ -8,8 +9,8 @@ import { StorageAdapter, SessionData } from "../types";
  *
  * @example
  * ```typescript
- * // Create storage with 10-minute session timeout
- * const storage = new MemoryStorage(10);
+ * // Create storage with 600 seconds (10 minutes) session timeout
+ * const storage = new MemoryStorage(600);
  *
  * // Store session data
  * await storage.set("chat123", { lastActivity: Date.now() });
@@ -21,36 +22,38 @@ import { StorageAdapter, SessionData } from "../types";
 export class MemoryStorage<T = any> implements StorageAdapter<T> {
 	/** Internal storage using Map to hold session data */
 	private store = new Map<string, SessionData<T>>();
-
 	/** Reference to the cleanup interval timer */
 	private cleanupInterval: ReturnType<typeof setInterval> | null = null;
+	/** Callback for handling session timeouts */
+	public events = new StorageEventEmitter<T>();
 
 	/**
 	 * Creates a new instance of MemoryStorage.
 	 *
-	 * @param timeoutMinutes - Number of minutes after which inactive sessions are removed
+	 * @param timeoutSeconds - Number of seconds after which inactive sessions are removed
 	 */
-	constructor(private timeoutMinutes: number = 5) {
+	constructor(private timeoutSeconds: number) {
 		this.startCleanup();
 	}
 
 	/**
 	 * Starts the periodic cleanup of expired sessions.
-	 * Runs every minute to remove sessions that have been inactive
+	 * Runs every 10 seconds to remove sessions that have been inactive
 	 * longer than the specified timeout.
 	 *
 	 * @internal
 	 */
 	private startCleanup() {
 		this.cleanupInterval = setInterval(() => {
-			const cutoff = Date.now() - (this.timeoutMinutes * 60000);
+			const cutoff = Date.now() - (this.timeoutSeconds * 1000);
 
 			for (const [chatId, session] of this.store.entries()) {
 				if (session.lastActivity < cutoff) {
+					this.events.emit("sessionExpired", chatId, session);
 					this.store.delete(chatId);
 				}
 			}
-		}, 60000);
+		}, 10000);
 	}
 
 	/**

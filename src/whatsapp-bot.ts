@@ -38,7 +38,7 @@ export class WhatsAppBot<T = any> {
 	/** Green API client instance */
 	public api: API;
 	/** Storage adapter for session management */
-	private readonly storage: StorageAdapter<T>;
+	protected readonly storage: StorageAdapter<T>;
 	/** Map of message type handlers */
 	private typeHandlers = new Map<string, MessageHandler<T>[]>();
 	/** Map of exact text match handlers */
@@ -47,8 +47,10 @@ export class WhatsAppBot<T = any> {
 	private regexHandlers: { pattern: RegExp; handler: MessageHandler<T> }[] = [];
 	/** Map of state handlers */
 	private states = new Map<string, State<T>>();
-	/** Session timeout in milliseconds */
+	/** Session timeout in seconds */
 	private readonly sessionTimeout: number;
+	/** Function that returns timeout message based on session data */
+	private readonly getSessionTimeoutMessage?: (session: SessionData<T>) => string;
 	/** Bot running status */
 	private isRunning = false;
 	/** Default state name */
@@ -57,20 +59,41 @@ export class WhatsAppBot<T = any> {
 	private readonly backCommands: string | string[];
 	private readonly settings: Partial<Settings.Settings>;
 	public wid?: string;
+	private readonly clearWebhookQueueOnStart: boolean;
 
 	/**
 	 * Creates a new WhatsApp bot instance.
 	 *
 	 * @param config - Bot configuration options
 	 */
-	constructor(config: BotConfig) {
+	constructor(config: BotConfig<T>) {
 		this.api = restAPI({
 			idInstance: config.idInstance,
 			apiTokenInstance: config.apiTokenInstance,
 		});
-
-		this.storage = config.storage || new MemoryStorage<T>();
-		this.sessionTimeout = (config.sessionTimeout || 5) * 60000;
+		this.sessionTimeout = config.sessionTimeout || 300;
+		this.getSessionTimeoutMessage = config.getSessionTimeoutMessage;
+		if (config.storage) {
+			this.storage = config.storage;
+			if (this.storage.setSessionTimeout) {
+				this.storage.setSessionTimeout(this.sessionTimeout);
+			}
+		} else {
+			this.storage = new MemoryStorage<T>(this.sessionTimeout);
+		}
+		if (this.storage.events && this.getSessionTimeoutMessage) {
+			this.storage.events.on("sessionExpired", async (chatId, session) => {
+				if (this.getSessionTimeoutMessage) {
+					debug(`Sending a timeout notification to ${chatId}`, session);
+					try {
+						const message = this.getSessionTimeoutMessage(session);
+						await this.sendText(chatId, message);
+					} catch (error) {
+						console.error("Error sending timeout message:", error);
+					}
+				}
+			});
+		}
 		this.defaultState = config.defaultState || "root";
 		this.backCommands = Array.isArray(config.backCommands)
 			? config.backCommands
@@ -85,6 +108,7 @@ export class WhatsAppBot<T = any> {
 			outgoingMessageWebhook: "no",
 			pollMessageWebhook: "yes",
 		};
+		this.clearWebhookQueueOnStart = config.clearWebhookQueueOnStart ?? false;
 
 		this.backCommands.forEach(command => {
 			this.onText(command, async (message, session) => {
@@ -95,6 +119,19 @@ export class WhatsAppBot<T = any> {
 				}
 			});
 		});
+	}
+
+	private async clearWebhookQueue(): Promise<void> {
+		debug("Clearing webhook queue...");
+		while (true) {
+			const notification = await this.api.webhookService.receiveNotification();
+			if (!notification) {
+				debug("Queue is empty");
+				break;
+			}
+			await this.api.webhookService.deleteNotification(notification.receiptId);
+			debug(`Deleted notification id: ${notification.receiptId}`);
+		}
 	}
 
 	/**
@@ -120,6 +157,7 @@ export class WhatsAppBot<T = any> {
 	 * @param stateName - Name of the state to enter
 	 * @param stateData - Optional data to pass to the new state
 	 * @param skipOnEnter - Whether to skip the onEnter handler
+	 * @param continueToOnMessage - Whether to continue processing the current message in onMessage after onEnter
 	 */
 	async enterState(
 		message: Message,
@@ -127,6 +165,7 @@ export class WhatsAppBot<T = any> {
 		stateName: string,
 		stateData?: T,
 		skipOnEnter?: boolean,
+		continueToOnMessage: boolean = false,
 	): Promise<void> {
 		const state = this.states.get(stateName);
 		if (!state) {
@@ -155,9 +194,65 @@ export class WhatsAppBot<T = any> {
 			if (result) {
 				if (typeof result === "string") {
 					await this.enterState(message, session, result, undefined, false);
+					return;
 				} else if ("state" in result) {
-					await this.enterState(message, session, result.state, result.data, result.skipOnEnter);
+					await this.enterState(message, session, result.state, result.data, result.skipOnEnter, result.continueToOnMessage);
+					return;
 				}
+			}
+		}
+		if (continueToOnMessage) {
+			await this.handleMessage(message, session);
+		}
+	}
+
+	private async handleMessage(message: Message, session: SessionData<T>): Promise<void> {
+		let shouldContinueToHandlers = true;
+
+		if (session.currentState) {
+			const state = this.states.get(session.currentState);
+			if (state) {
+				const result = await state.onMessage(message, session.stateData);
+
+				if (result === null) {
+					shouldContinueToHandlers = true;
+				} else if (result === undefined) {
+					shouldContinueToHandlers = false;
+				} else if (typeof result === "string") {
+					await this.enterState(message, session, result);
+					shouldContinueToHandlers = false;
+				} else if (typeof result === "object" && "state" in result) {
+					await this.enterState(message, session, result.state, result.data);
+					shouldContinueToHandlers = false;
+				}
+			}
+		}
+
+		if (shouldContinueToHandlers) {
+			if (message.text) {
+				const lowerText = message.text.toLowerCase();
+				const textHandler = this.textHandlers.get(lowerText);
+				if (textHandler) {
+					await textHandler(message, session);
+					return;
+				}
+
+				for (const {pattern, handler} of this.regexHandlers) {
+					if (pattern.test(message.text)) {
+						await handler(message, session);
+						return;
+					}
+				}
+			}
+
+			const typeHandlers = [
+				...(this.typeHandlers.get(message.type) || []),
+				...(this.typeHandlers.get("*") || []),
+			];
+
+			if (typeHandlers.length > 0) {
+				await typeHandlers[0](message, session);
+				return;
 			}
 		}
 	}
@@ -364,6 +459,10 @@ export class WhatsAppBot<T = any> {
 			this.wid = settings.wid;
 			await this.api.settings.setSettings(this.settings);
 			debug("Settings configuration initiated - they may take several minutes to apply");
+			if (this.clearWebhookQueueOnStart) {
+				debug("Clearing the webhook queue");
+				await this.clearWebhookQueue();
+			}
 		} catch (error: any) {
 			const formattedError = formatAxiosError(error);
 			debug("Error during settings configuration:", formattedError);
@@ -433,61 +532,14 @@ export class WhatsAppBot<T = any> {
 		}
 
 		const message = parseMessage(notification.body);
-		const session = await this.getSession(message.chatId);
+		const session = await this.getOrCreateSession(message.chatId);
 
 		if (!session.currentState) {
 			await this.enterState(message, session, this.defaultState);
 			return;
 		}
 
-		let shouldContinueToHandlers = true;
-
-		if (session.currentState) {
-			const state = this.states.get(session.currentState);
-			if (state) {
-				const result = await state.onMessage(message, session.stateData);
-
-				if (result === null) {
-					shouldContinueToHandlers = true;
-				} else if (result === undefined) {
-					shouldContinueToHandlers = false;
-				} else if (typeof result === "string") {
-					await this.enterState(message, session, result);
-					shouldContinueToHandlers = false;
-				} else if (typeof result === "object" && "state" in result) {
-					await this.enterState(message, session, result.state, result.data);
-					shouldContinueToHandlers = false;
-				}
-			}
-		}
-
-		if (shouldContinueToHandlers) {
-			if (message.text) {
-				const lowerText = message.text.toLowerCase();
-				const textHandler = this.textHandlers.get(lowerText);
-				if (textHandler) {
-					await textHandler(message, session);
-					return;
-				}
-
-				for (const {pattern, handler} of this.regexHandlers) {
-					if (pattern.test(message.text)) {
-						await handler(message, session);
-						return;
-					}
-				}
-			}
-
-			const typeHandlers = [
-				...(this.typeHandlers.get(message.type) || []),
-				...(this.typeHandlers.get("*") || []),
-			];
-
-			if (typeHandlers.length > 0) {
-				await typeHandlers[0](message, session);
-				return;
-			}
-		}
+		await this.handleMessage(message, session);
 	}
 
 	/**
@@ -498,16 +550,10 @@ export class WhatsAppBot<T = any> {
 	 * @returns Session data for the chat
 	 * @internal
 	 */
-	private async getSession(chatId: string): Promise<SessionData<T>> {
+	private async getOrCreateSession(chatId: string): Promise<SessionData<T>> {
 		const session = await this.storage.get(chatId) || {
 			lastActivity: Date.now(),
 		};
-
-		if (Date.now() - session.lastActivity > this.sessionTimeout) {
-			const newSession = {lastActivity: Date.now()};
-			await this.storage.set(chatId, newSession);
-			return newSession;
-		}
 
 		session.lastActivity = Date.now();
 		await this.storage.set(chatId, session);
