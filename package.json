@@ -1,6 +1,6 @@
 {
   "name": "@green-api/whatsapp-chatbot-js-v2",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Modern WhatsApp Bot Framework for Node.js",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
