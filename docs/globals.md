@@ -7,17 +7,18 @@
 ## Classes
 
 - [MemoryStorage](classes/MemoryStorage.md)
+- [StorageEventEmitter](classes/StorageEventEmitter.md)
 - [WhatsAppBot](classes/WhatsAppBot.md)
 
 ## Interfaces
 
 - [BotConfig](interfaces/BotConfig.md)
 - [Message](interfaces/Message.md)
-- [OnEnterStateTransition](interfaces/OnEnterStateTransition.md)
 - [SessionData](interfaces/SessionData.md)
 - [State](interfaces/State.md)
 - [StateTransition](interfaces/StateTransition.md)
 - [StorageAdapter](interfaces/StorageAdapter.md)
+- [StorageEvents](interfaces/StorageEvents.md)
 
 ## Type Aliases
 

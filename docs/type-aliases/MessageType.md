@@ -8,6 +8,6 @@
 
 > **MessageType**: `"text"` \| `"image"` \| `"video"` \| `"document"` \| `"audio"` \| `"location"` \| `"contact"` \| `"poll"` \| `"pollUpdate"`
 
-Defined in: [types/index.ts:75](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/types/index.ts#L75)
+Defined in: [src/types/index.ts:81](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/6c0c4f4b360c7e87dd13e91d54244d90d03a5549/src/types/index.ts#L81)
 
 Supported message types from WhatsApp

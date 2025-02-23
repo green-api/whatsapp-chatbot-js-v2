@@ -69,18 +69,84 @@ bot.start();
 
 ## Основные компоненты
 
+### Конфигурация бота
+
+Полные параметры конфигурации для WhatsAppBot:
+
+```typescript
+interface BotConfig<T = any> {
+	/** ID инстанса GREEN API */
+	idInstance: string;
+
+	/** Токен инстанса GREEN API */
+	apiTokenInstance: string;
+
+	/** Начальное состояние для новых сессий. По умолчанию: "root" */
+	defaultState?: string;
+
+	/** Таймаут сессии в секундах. По умолчанию: 300 (5 минут) */
+	sessionTimeout?: number;
+
+	/** Функция для генерации сообщения о таймауте сессии на основе данных сессии */
+	getSessionTimeoutMessage?: (session: SessionData<T>) => string;
+
+	/** Команда(ы) для навигации назад. По умолчанию: "back" */
+	backCommands?: string | string[];
+
+	/** Пользовательский адаптер хранилища для управления сессиями. По умолчанию: MemoryStorage */
+	storage?: StorageAdapter<T>;
+
+	/** Пользовательские настройки для инстанса GREEN-API */
+	settings?: {
+		webhookUrl?: string;
+		webhookUrlToken?: string;
+		outgoingWebhook?: "yes" | "no";
+		stateWebhook?: "yes" | "no";
+		incomingWebhook?: "yes" | "no";
+		outgoingAPIMessageWebhook?: "yes" | "no";
+		outgoingMessageWebhook?: "yes" | "no";
+		pollMessageWebhook?: "yes" | "no";
+		markIncomingMessagesReaded?: "yes" | "no";
+	};
+
+	/** Очищать ли очередь webhook при запуске бота. По умолчанию: false */
+	clearWebhookQueueOnStart?: boolean;
+}
+```
+
 ### WhatsAppBot
 
 Основной класс для создания и управления ботом:
 
 ```typescript
-const bot = new WhatsAppBot({
+const bot = new WhatsAppBot<CustomSessionData>({
+	// Обязательные параметры
 	idInstance: "your-instance-id",
 	apiTokenInstance: "your-token",
-	defaultState: "menu", // Опционально: настройка имени базового состояния
-	backCommand: "back",  // Опционально: настройка команды возврата
-	sessionTimeout: 30,   // Опционально: таймаут сессии в минутах
-	storage: customStorage, // Опционально: реализация пользовательского хранилища
+
+	// Опциональные параметры
+	defaultState: "menu",
+	sessionTimeout: 30, // 30 секунд
+	getSessionTimeoutMessage: (session) => {
+		// Пользовательская логика для сообщения о таймауте
+		return "Ваша сессия истекла. Начинаем сначала.";
+	},
+	backCommands: ["back", "назад", "меню"],
+	storage: new CustomStorage(),
+	clearWebhookQueueOnStart: true,
+
+	// Настройки инстанса GREEN-API
+	settings: {
+		webhookUrl: "",
+		webhookUrlToken: "",
+		outgoingWebhook: "no",
+		stateWebhook: "no",
+		incomingWebhook: "yes",
+		outgoingAPIMessageWebhook: "no",
+		outgoingMessageWebhook: "no",
+		pollMessageWebhook: "yes",
+		markIncomingMessagesReaded: "yes"
+	}
 });
 ```
 
@@ -132,22 +198,48 @@ bot.onType("image", async (message) => {
 
 ```typescript
 interface StorageAdapter<T = any> {
+	/** Опциональный эмиттер событий для событий, связанных с сессиями, например, истечение срока жизни сессии */
+	events?: StorageEventEmitter<T>;
+
+	/** Получает данные сессии для чата */
 	get(chatId: string): Promise<SessionData<T> | null>;
 
+	/** Сохраняет данные сессии для чата */
 	set(chatId: string, data: SessionData<T>): Promise<void>;
+
+	/** Опциональный метод для получения значения таймаута сессии (для cleanup процессов) */
+	setSessionTimeout?(timeoutMs: number): void;
 }
 ```
 
 Пример пользовательского хранилища:
 
 ```typescript
-class CustomStorage implements StorageAdapter {
-	async get(chatId: string) {
+class DatabaseStorage implements StorageAdapter {
+	public events = new StorageEventEmitter();
+
+	constructor(timeoutSeconds: number) {
+		setInterval(() => {
+			// Поиск истекших сессий
+			const expiredSessions = // ... ваша логика
+
+			for (const session of expiredSessions) {
+				this.events.emit('sessionExpired', session.chatId, session);
+				// Удаление сессии
+			}
+		}, 10000);
+	}
+
+	async get(chatId: string): Promise<SessionData | null> {
 		return await db.sessions.findOne({chatId});
 	}
 
-	async set(chatId: string, data: SessionData) {
-		await db.sessions.upsert({chatId, ...data});
+	async set(chatId: string, data: SessionData): Promise<void> {
+		await db.sessions.updateOne(
+			{chatId},
+			{$set: data},
+			{upsert: true}
+		);
 	}
 }
 ```
@@ -269,14 +361,56 @@ const orderState: State<OrderData> = {
 
 ### Таймаут сессии
 
-Сессии истекают после периода неактивности (по умолчанию 5 минут):
+Сессии истекают после периода неактивности (по умолчанию 300 секунд / 5 минут). Вы можете настроить как
+продолжительность таймаута, так и сообщение, отправляемое при истечении срока жизни сессии:
 
 ```typescript
 const bot = new WhatsAppBot({
-	// 30 минут (работает только со встроенным хранилищем, если вы используете свой адаптер хранилища, вам нужно реализовать логику таймаута сессии самостоятельно)
+	// Установить таймаут на 30 секунд
 	sessionTimeout: 30,
+
+	// Пользовательское сообщение о таймауте
+	getSessionTimeoutMessage: (session) => {
+		// Вы можете получить доступ к данным сессии для настройки сообщения
+		const userName = session.stateData?.userName || "Пользователь";
+		return `Здравствуйте, ${userName}, ваша сессия истекла. Начинаем новый диалог.`;
+	}
 });
 ```
+
+Встроенное хранилище (MemoryStorage) проверяет истекшие сессии каждые 10 секунд и автоматически удаляет их. Если вы
+реализуете
+свой собственный адаптер хранилища, вам нужно будет реализовать свой механизм очистки.
+
+### События при таймауте сессии
+
+Адаптеры хранилища могут опционально отправлять события при истечении срока жизни сессий. Эта функция позволяет боту
+отправлять
+уведомления о таймауте:
+
+```typescript
+import { EventEmitter } from 'events';
+
+class DatabaseStorage implements StorageAdapter {
+	public events = new StorageEventEmitter();
+
+	constructor(timeoutSeconds: number) {
+		// Настройка очистки, которая отправляет события
+		setInterval(() => {
+			// Найти истекшие сессии
+			const expiredSessions = // ... ваша логика
+
+			for (const session of expiredSessions) {
+				this.events.emit('sessionExpired', session.chatId, session);
+				// Удалить сессию
+			}
+		}, 10000);
+	}
+}
+```
+
+Поле events является опциональным - если вам не нужны уведомления о таймауте, вы можете опустить его в вашей реализации
+хранилища. Сообщение о таймауте определяется в функции getSessionTimeoutMessage.
 
 ## Процесс обработки сообщений
 

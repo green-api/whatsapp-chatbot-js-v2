@@ -4,11 +4,17 @@
 
 [WhatsApp Bot Framework](../globals.md) / BotConfig
 
-# Interface: BotConfig
+# Interface: BotConfig\<T\>
 
-Defined in: [types/index.ts:6](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/types/index.ts#L6)
+Defined in: [src/types/index.ts:8](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/6c0c4f4b360c7e87dd13e91d54244d90d03a5549/src/types/index.ts#L8)
 
 Configuration options for initializing the WhatsApp bot.
+
+## Type Parameters
+
+• **T** = `any`
+
+Type of custom state data
 
 ## Properties
 
@@ -16,29 +22,59 @@ Configuration options for initializing the WhatsApp bot.
 
 > **apiTokenInstance**: `string`
 
-Defined in: [types/index.ts:10](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/types/index.ts#L10)
+Defined in: [src/types/index.ts:12](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/6c0c4f4b360c7e87dd13e91d54244d90d03a5549/src/types/index.ts#L12)
 
 Green API instance token
 
 ***
 
-### backCommands
+### backCommands?
 
-> **backCommands**: `string` \| `string`[]
+> `optional` **backCommands**: `string` \| `string`[]
 
-Defined in: [types/index.ts:18](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/types/index.ts#L18)
+Defined in: [src/types/index.ts:22](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/6c0c4f4b360c7e87dd13e91d54244d90d03a5549/src/types/index.ts#L22)
 
 Command text to trigger back navigation
 
 ***
 
-### defaultState
+### clearWebhookQueueOnStart?
 
-> **defaultState**: `string`
+> `optional` **clearWebhookQueueOnStart**: `boolean`
 
-Defined in: [types/index.ts:16](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/types/index.ts#L16)
+Defined in: [src/types/index.ts:26](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/6c0c4f4b360c7e87dd13e91d54244d90d03a5549/src/types/index.ts#L26)
 
-Initial state name for new sessions
+Whether to clear webhook notification queue on bot startup. Default: false.
+
+***
+
+### defaultState?
+
+> `optional` **defaultState**: `string`
+
+Defined in: [src/types/index.ts:20](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/6c0c4f4b360c7e87dd13e91d54244d90d03a5549/src/types/index.ts#L20)
+
+Initial state name for new sessions. Default: root.
+
+***
+
+### getSessionTimeoutMessage()?
+
+> `optional` **getSessionTimeoutMessage**: (`session`) => `string`
+
+Defined in: [src/types/index.ts:18](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/6c0c4f4b360c7e87dd13e91d54244d90d03a5549/src/types/index.ts#L18)
+
+Function that returns timeout message based on session data
+
+#### Parameters
+
+##### session
+
+[`SessionData`](SessionData.md)\<`T`\>
+
+#### Returns
+
+`string`
 
 ***
 
@@ -46,7 +82,7 @@ Initial state name for new sessions
 
 > **idInstance**: `string`
 
-Defined in: [types/index.ts:8](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/types/index.ts#L8)
+Defined in: [src/types/index.ts:10](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/6c0c4f4b360c7e87dd13e91d54244d90d03a5549/src/types/index.ts#L10)
 
 Green API instance ID
 
@@ -56,9 +92,9 @@ Green API instance ID
 
 > `optional` **sessionTimeout**: `number`
 
-Defined in: [types/index.ts:14](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/types/index.ts#L14)
+Defined in: [src/types/index.ts:16](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/6c0c4f4b360c7e87dd13e91d54244d90d03a5549/src/types/index.ts#L16)
 
-Session timeout in minutes
+Session timeout in seconds
 
 ***
 
@@ -66,7 +102,7 @@ Session timeout in minutes
 
 > `optional` **settings**: `Partial`\<`Settings`\>
 
-Defined in: [types/index.ts:20](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/types/index.ts#L20)
+Defined in: [src/types/index.ts:24](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/6c0c4f4b360c7e87dd13e91d54244d90d03a5549/src/types/index.ts#L24)
 
 Custom settings. If not provided, default settings are used
 
@@ -76,6 +112,6 @@ Custom settings. If not provided, default settings are used
 
 > `optional` **storage**: [`StorageAdapter`](StorageAdapter.md)
 
-Defined in: [types/index.ts:12](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/types/index.ts#L12)
+Defined in: [src/types/index.ts:14](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/6c0c4f4b360c7e87dd13e91d54244d90d03a5549/src/types/index.ts#L14)
 
 Custom storage adapter for session management

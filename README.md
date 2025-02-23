@@ -69,18 +69,84 @@ bot.start();
 
 ## Core Components
 
+### Bot Configuration
+
+Complete configuration options for the WhatsAppBot:
+
+```typescript
+interface BotConfig<T = any> {
+	/** Green API instance ID */
+	idInstance: string;
+
+	/** Green API instance token */
+	apiTokenInstance: string;
+
+	/** Initial state name for new sessions. Default: "root" */
+	defaultState?: string;
+
+	/** Session timeout in seconds. Default: 300 (5 minutes) */
+	sessionTimeout?: number;
+
+	/** Function to generate session timeout message based on session data */
+	getSessionTimeoutMessage?: (session: SessionData<T>) => string;
+
+	/** Command(s) to trigger back navigation. Default: "back" */
+	backCommands?: string | string[];
+
+	/** Custom storage adapter for session management. Default: MemoryStorage */
+	storage?: StorageAdapter<T>;
+
+	/** Custom settings for the GREEN-API instance */
+	settings?: {
+		webhookUrl?: string;
+		webhookUrlToken?: string;
+		outgoingWebhook?: "yes" | "no";
+		stateWebhook?: "yes" | "no";
+		incomingWebhook?: "yes" | "no";
+		outgoingAPIMessageWebhook?: "yes" | "no";
+		outgoingMessageWebhook?: "yes" | "no";
+		pollMessageWebhook?: "yes" | "no";
+		markIncomingMessagesReaded?: "yes" | "no";
+	};
+
+	/** Whether to clear webhook queue on bot startup. Default: false */
+	clearWebhookQueueOnStart?: boolean;
+}
+```
+
 ### WhatsAppBot
 
 Main class for creating and managing your bot:
 
 ```typescript
-const bot = new WhatsAppBot({
+const bot = new WhatsAppBot<CustomSessionData>({
+	// Required parameters
 	idInstance: "your-instance-id",
 	apiTokenInstance: "your-token",
-	defaultState: "menu", // Optional: customize default state namea
-	backCommand: "back",  // Optional: customize back navigation command
-	sessionTimeout: 30,   // Optional: session timeout in minutes
-	storage: customStorage, // Optional: custom storage implementation
+
+	// Optional parameters
+	defaultState: "menu",
+	sessionTimeout: 30, // 30 seconds
+	getSessionTimeoutMessage: (session) => {
+		// Custom logic to return timeout message
+		return "Your session has expired. Starting over.";
+	},
+	backCommands: ["back", "return", "menu"],
+	storage: new CustomStorage(),
+	clearWebhookQueueOnStart: true,
+
+	// GREEN-API instance settings
+	settings: {
+		webhookUrl: "",
+		webhookUrlToken: "",
+		outgoingWebhook: "no",
+		stateWebhook: "no",
+		incomingWebhook: "yes",
+		outgoingAPIMessageWebhook: "no",
+		outgoingMessageWebhook: "no",
+		pollMessageWebhook: "yes",
+		markIncomingMessagesReaded: "yes"
+	}
 });
 ```
 
@@ -132,9 +198,17 @@ Built-in memory storage with custom adapter support:
 
 ```typescript
 interface StorageAdapter<T = any> {
+	/** Optional event emitter for session-related events like expiration */
+	events?: StorageEventEmitter<T>;
+
+	/** Retrieves session data for a chat */
 	get(chatId: string): Promise<SessionData<T> | null>;
 
+	/** Stores session data for a chat */
 	set(chatId: string, data: SessionData<T>): Promise<void>;
+
+	/** Optional method to receive session timeout value for cleanup processes */
+	setSessionTimeout?(timeoutMs: number): void;
 }
 ```
 
@@ -268,14 +342,54 @@ const orderState: State<OrderData> = {
 
 ### Session Timeout
 
-Sessions expire after inactivity (default 5 minutes):
+Sessions expire after inactivity (default 300 seconds / 5 minutes). You can customize both the timeout duration and the
+message sent when a session times out:
 
 ```typescript
 const bot = new WhatsAppBot({
-	// 30 minutes (works only with a default storage, if you use your own storage adapter you will have to implement session timeout logic yourself)
+	// Set timeout to 30 seconds
 	sessionTimeout: 30,
+
+	// Custom timeout message
+	getSessionTimeoutMessage: (session) => {
+		// You can access session data to customize the message
+		const userName = session.stateData?.userName || "User";
+		return `Hello ${userName}, your session has expired. Starting a new conversation.`;
+	}
 });
 ```
+
+The built-in memory storage checks for expired sessions every 10 seconds and automatically removes them. If you
+implement your own storage adapter, you'll need to implement your own cleanup mechanism.
+
+### Session Timeout Events
+
+Storage adapters can optionally emit events when sessions expire. This feature enables the bot to send timeout
+notifications:
+
+```typescript
+import { EventEmitter } from 'events';
+
+class DatabaseStorage implements StorageAdapter {
+	public events = new StorageEventEmitter();
+
+	constructor(timeoutSeconds: number) {
+		// Set up cleanup that emits events
+		setInterval(() => {
+			// Find expired sessions
+			const expiredSessions = // ... your logic
+
+			for (const session of expiredSessions) {
+				this.events.emit('sessionExpired', session.chatId, session);
+				// Delete session
+			}
+		}, 10000);
+	}
+}
+```
+
+The events field is optional - if you don't need timeout notifications, you can omit it from your storage
+implementation. The timeout message is defined in the getSessionTimeoutMessage function.
 
 ## Message Handling Flow
 
@@ -365,6 +479,25 @@ Default storage is in-memory, but you can implement custom storage:
 
 ```typescript
 class DatabaseStorage implements StorageAdapter {
+	// Optional event support for timeout notifications
+	public events?: StorageEventEmitter;
+
+	constructor(timeoutSeconds: number) {
+		// Optional: Set up events if you want timeout notifications
+		this.events = new StorageEventEmitter();
+		this.startCleanup(timeoutSeconds);
+	}
+
+	private async startCleanup(timeoutSeconds: number) {
+		setInterval(async () => {
+			// Your cleanup logic
+			if (this.events) {
+				// Emit events for expired sessions
+				this.events.emit('sessionExpired', chatId, session);
+			}
+		}, 10000);
+	}
+
 	async get(chatId: string): Promise<SessionData | null> {
 		return await db.sessions.findOne({chatId});
 	}

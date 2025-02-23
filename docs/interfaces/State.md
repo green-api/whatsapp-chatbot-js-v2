@@ -6,7 +6,7 @@
 
 # Interface: State\<T\>
 
-Defined in: [types/index.ts:118](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/types/index.ts#L118)
+Defined in: [src/types/index.ts:117](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/6c0c4f4b360c7e87dd13e91d54244d90d03a5549/src/types/index.ts#L117)
 
 Defines a state in the bot's state machine.
 
@@ -22,7 +22,7 @@ Type of custom state data
 
 > **name**: `string`
 
-Defined in: [types/index.ts:120](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/types/index.ts#L120)
+Defined in: [src/types/index.ts:119](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/6c0c4f4b360c7e87dd13e91d54244d90d03a5549/src/types/index.ts#L119)
 
 Unique state identifier
 
@@ -30,15 +30,15 @@ Unique state identifier
 
 ### onEnter()?
 
-> `optional` **onEnter**: (`message`, `stateData`?) => `Promise`\<`string` \| `void` \| [`OnEnterStateTransition`](OnEnterStateTransition.md)\<`T`\>\>
+> `optional` **onEnter**: (`message`, `stateData`?) => `Promise`\<`string` \| `void` \| [`StateTransition`](StateTransition.md)\<`T`\>\>
 
-Defined in: [types/index.ts:128](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/types/index.ts#L128)
+Defined in: [src/types/index.ts:127](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/6c0c4f4b360c7e87dd13e91d54244d90d03a5549/src/types/index.ts#L127)
 
 Handler called when entering the state.
 Return values:
 - void: Stay in state
 - string: Transition to that state
-- OnEnterStateTransition: Transition with data
+- StateTransition: Transition with data
 
 #### Parameters
 
@@ -52,7 +52,7 @@ Return values:
 
 #### Returns
 
-`Promise`\<`string` \| `void` \| [`OnEnterStateTransition`](OnEnterStateTransition.md)\<`T`\>\>
+`Promise`\<`string` \| `void` \| [`StateTransition`](StateTransition.md)\<`T`\>\>
 
 ***
 
@@ -60,7 +60,7 @@ Return values:
 
 > `optional` **onLeave**: (`message`, `stateData`?) => `Promise`\<`void`\>
 
-Defined in: [types/index.ts:139](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/types/index.ts#L139)
+Defined in: [src/types/index.ts:138](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/6c0c4f4b360c7e87dd13e91d54244d90d03a5549/src/types/index.ts#L138)
 
 Handler called when leaving the state
 
@@ -84,7 +84,7 @@ Handler called when leaving the state
 
 > **onMessage**: (`message`, `stateData`?) => `Promise`\<`null` \| `string` \| `void` \| [`StateTransition`](StateTransition.md)\<`T`\>\>
 
-Defined in: [types/index.ts:137](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/3a291a116c693666e84c00cdfc7b1afd2795fe33/src/types/index.ts#L137)
+Defined in: [src/types/index.ts:136](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/6c0c4f4b360c7e87dd13e91d54244d90d03a5549/src/types/index.ts#L136)
 
 Handler for processing messages in this state.
 Return values:
