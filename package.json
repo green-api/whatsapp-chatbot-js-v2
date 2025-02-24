@@ -32,7 +32,7 @@
   },
   "homepage": "https://github.com/green-api/whatsapp-bot#readme",
   "dependencies": {
-    "@green-api/whatsapp-api-client": "^0.4.3",
+    "@green-api/whatsapp-api-client": "^0.4.4",
     "debug": "^4.4.0",
     "form-data": "^4.0.1"
   },

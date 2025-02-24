@@ -107,6 +107,8 @@ export class WhatsAppBot<T = any> {
 			outgoingAPIMessageWebhook: "no",
 			outgoingMessageWebhook: "no",
 			pollMessageWebhook: "yes",
+			editedMessageWebhook: "no",
+			deletedMessageWebhook: "no",
 		};
 		this.clearWebhookQueueOnStart = config.clearWebhookQueueOnStart ?? false;
 
