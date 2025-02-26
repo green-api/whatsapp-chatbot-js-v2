@@ -42,13 +42,18 @@ export interface Message {
 	timestamp: number;
 	/** Name of the message sender */
 	senderName: string;
-	/** Media information if present */
+	/** Media information if present (for image, video, document, audio) */
 	media?: {
 		/** URL to download the media */
 		url?: string;
 		/** Media caption if any */
 		caption?: string;
+		/** File name */
+		fileName?: string;
+		/** Mime type of the file */
+		mimeType?: string;
 	};
+	/** Poll update */
 	pollUpdate?: {
 		stanzaId: string;
 		name: string;
@@ -58,6 +63,28 @@ export interface Message {
 		}>;
 		multipleAnswers: boolean;
 	};
+	/** Poll */
+	poll?: {
+		name: string;
+		options: Array<{
+			optionName: string;
+		}>;
+		multipleAnswers: boolean;
+	};
+	/** Location */
+	location?: {
+		latitude: number;
+		longitude: number;
+		name?: string;
+		address?: string;
+	};
+	/** Contact */
+	contact?: {
+		displayName: string;
+		vcard: string;
+	};
+	/** Original webhook notification data (for advanced use cases) */
+	raw?: any;
 }
 
 /**
