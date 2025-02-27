@@ -6,7 +6,7 @@
 
 # Interface: StorageAdapter\<T\>
 
-Defined in: [src/types/index.ts:145](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/6c0c4f4b360c7e87dd13e91d54244d90d03a5549/src/types/index.ts#L145)
+Defined in: [src/types/index.ts:174](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/c30756ad4732aa30584821f7e49dc15f946b6a2a/src/types/index.ts#L174)
 
 Interface for implementing custom storage solutions.
 
@@ -22,7 +22,7 @@ Type of custom state data
 
 > `optional` **events**: [`StorageEventEmitter`](../classes/StorageEventEmitter.md)\<`T`\>
 
-Defined in: [src/types/index.ts:147](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/6c0c4f4b360c7e87dd13e91d54244d90d03a5549/src/types/index.ts#L147)
+Defined in: [src/types/index.ts:176](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/c30756ad4732aa30584821f7e49dc15f946b6a2a/src/types/index.ts#L176)
 
 Optional event emitter for session-related events like expiration
 
@@ -32,7 +32,7 @@ Optional event emitter for session-related events like expiration
 
 > **get**(`chatId`): `Promise`\<`null` \| [`SessionData`](SessionData.md)\<`T`\>\>
 
-Defined in: [src/types/index.ts:150](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/6c0c4f4b360c7e87dd13e91d54244d90d03a5549/src/types/index.ts#L150)
+Defined in: [src/types/index.ts:179](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/c30756ad4732aa30584821f7e49dc15f946b6a2a/src/types/index.ts#L179)
 
 Retrieves session data for a chat
 
@@ -52,7 +52,7 @@ Retrieves session data for a chat
 
 > **set**(`chatId`, `data`): `Promise`\<`void`\>
 
-Defined in: [src/types/index.ts:153](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/6c0c4f4b360c7e87dd13e91d54244d90d03a5549/src/types/index.ts#L153)
+Defined in: [src/types/index.ts:182](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/c30756ad4732aa30584821f7e49dc15f946b6a2a/src/types/index.ts#L182)
 
 Stores session data for a chat
 
@@ -76,7 +76,7 @@ Stores session data for a chat
 
 > `optional` **setSessionTimeout**(`timeoutMs`): `void`
 
-Defined in: [src/types/index.ts:156](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/6c0c4f4b360c7e87dd13e91d54244d90d03a5549/src/types/index.ts#L156)
+Defined in: [src/types/index.ts:185](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/c30756ad4732aa30584821f7e49dc15f946b6a2a/src/types/index.ts#L185)
 
 Optional method to receive session timeout value for cleanup processes
 

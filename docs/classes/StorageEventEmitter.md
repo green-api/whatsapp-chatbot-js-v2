@@ -6,7 +6,7 @@
 
 # Class: StorageEventEmitter\<T\>
 
-Defined in: [src/storage/events.ts:21](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/6c0c4f4b360c7e87dd13e91d54244d90d03a5549/src/storage/events.ts#L21)
+Defined in: [src/storage/events.ts:21](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/c30756ad4732aa30584821f7e49dc15f946b6a2a/src/storage/events.ts#L21)
 
 Event emitter for storage events. Extends Node's EventEmitter.
 
@@ -48,7 +48,7 @@ Defined in: node\_modules/@types/node/events.d.ts:134
 
 > **emit**\<`K`\>(`event`, ...`args`): `boolean`
 
-Defined in: [src/storage/events.ts:28](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/6c0c4f4b360c7e87dd13e91d54244d90d03a5549/src/storage/events.ts#L28)
+Defined in: [src/storage/events.ts:28](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/c30756ad4732aa30584821f7e49dc15f946b6a2a/src/storage/events.ts#L28)
 
 Emits a storage event
 
@@ -86,7 +86,7 @@ true if the event had listeners, false otherwise
 
 > **on**\<`K`\>(`event`, `listener`): `this`
 
-Defined in: [src/storage/events.ts:38](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/6c0c4f4b360c7e87dd13e91d54244d90d03a5549/src/storage/events.ts#L38)
+Defined in: [src/storage/events.ts:38](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/c30756ad4732aa30584821f7e49dc15f946b6a2a/src/storage/events.ts#L38)
 
 Adds a listener for a storage event
 

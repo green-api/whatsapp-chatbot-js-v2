@@ -6,7 +6,7 @@
 
 # Interface: State\<T\>
 
-Defined in: [src/types/index.ts:117](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/6c0c4f4b360c7e87dd13e91d54244d90d03a5549/src/types/index.ts#L117)
+Defined in: [src/types/index.ts:146](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/c30756ad4732aa30584821f7e49dc15f946b6a2a/src/types/index.ts#L146)
 
 Defines a state in the bot's state machine.
 
@@ -22,7 +22,7 @@ Type of custom state data
 
 > **name**: `string`
 
-Defined in: [src/types/index.ts:119](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/6c0c4f4b360c7e87dd13e91d54244d90d03a5549/src/types/index.ts#L119)
+Defined in: [src/types/index.ts:148](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/c30756ad4732aa30584821f7e49dc15f946b6a2a/src/types/index.ts#L148)
 
 Unique state identifier
 
@@ -32,7 +32,7 @@ Unique state identifier
 
 > `optional` **onEnter**: (`message`, `stateData`?) => `Promise`\<`string` \| `void` \| [`StateTransition`](StateTransition.md)\<`T`\>\>
 
-Defined in: [src/types/index.ts:127](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/6c0c4f4b360c7e87dd13e91d54244d90d03a5549/src/types/index.ts#L127)
+Defined in: [src/types/index.ts:156](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/c30756ad4732aa30584821f7e49dc15f946b6a2a/src/types/index.ts#L156)
 
 Handler called when entering the state.
 Return values:
@@ -60,7 +60,7 @@ Return values:
 
 > `optional` **onLeave**: (`message`, `stateData`?) => `Promise`\<`void`\>
 
-Defined in: [src/types/index.ts:138](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/6c0c4f4b360c7e87dd13e91d54244d90d03a5549/src/types/index.ts#L138)
+Defined in: [src/types/index.ts:167](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/c30756ad4732aa30584821f7e49dc15f946b6a2a/src/types/index.ts#L167)
 
 Handler called when leaving the state
 
@@ -84,7 +84,7 @@ Handler called when leaving the state
 
 > **onMessage**: (`message`, `stateData`?) => `Promise`\<`null` \| `string` \| `void` \| [`StateTransition`](StateTransition.md)\<`T`\>\>
 
-Defined in: [src/types/index.ts:136](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/6c0c4f4b360c7e87dd13e91d54244d90d03a5549/src/types/index.ts#L136)
+Defined in: [src/types/index.ts:165](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/c30756ad4732aa30584821f7e49dc15f946b6a2a/src/types/index.ts#L165)
 
 Handler for processing messages in this state.
 Return values:

@@ -6,7 +6,7 @@
 
 # Interface: StateTransition\<T\>
 
-Defined in: [src/types/index.ts:102](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/6c0c4f4b360c7e87dd13e91d54244d90d03a5549/src/types/index.ts#L102)
+Defined in: [src/types/index.ts:131](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/c30756ad4732aa30584821f7e49dc15f946b6a2a/src/types/index.ts#L131)
 
 Represents a state transition with optional data.
 
@@ -22,7 +22,7 @@ Type of custom state data
 
 > `optional` **continueToOnMessage**: `boolean`
 
-Defined in: [src/types/index.ts:110](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/6c0c4f4b360c7e87dd13e91d54244d90d03a5549/src/types/index.ts#L110)
+Defined in: [src/types/index.ts:139](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/c30756ad4732aa30584821f7e49dc15f946b6a2a/src/types/index.ts#L139)
 
 Whether to continue processing the current message in onMessage after onEnter
 
@@ -32,7 +32,7 @@ Whether to continue processing the current message in onMessage after onEnter
 
 > `optional` **data**: `T`
 
-Defined in: [src/types/index.ts:106](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/6c0c4f4b360c7e87dd13e91d54244d90d03a5549/src/types/index.ts#L106)
+Defined in: [src/types/index.ts:135](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/c30756ad4732aa30584821f7e49dc15f946b6a2a/src/types/index.ts#L135)
 
 Optional data to pass to the new state
 
@@ -42,7 +42,7 @@ Optional data to pass to the new state
 
 > `optional` **skipOnEnter**: `boolean`
 
-Defined in: [src/types/index.ts:108](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/6c0c4f4b360c7e87dd13e91d54244d90d03a5549/src/types/index.ts#L108)
+Defined in: [src/types/index.ts:137](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/c30756ad4732aa30584821f7e49dc15f946b6a2a/src/types/index.ts#L137)
 
 Whether to skip the onEnter handler
 
@@ -52,6 +52,6 @@ Whether to skip the onEnter handler
 
 > **state**: `string`
 
-Defined in: [src/types/index.ts:104](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/6c0c4f4b360c7e87dd13e91d54244d90d03a5549/src/types/index.ts#L104)
+Defined in: [src/types/index.ts:133](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/c30756ad4732aa30584821f7e49dc15f946b6a2a/src/types/index.ts#L133)
 
 Target state name

@@ -115,6 +115,10 @@ interface BotConfig<T = any> {
 
 	/** Whether to clear webhook queue on bot startup. Default: false */
 	clearWebhookQueueOnStart?: boolean;
+
+	/** Controls message processing order. When true, global handlers run before state handlers (onMessage).
+	 * When false (default), state handlers run first. */
+	handlersFirst?: boolean;
 }
 ```
 
@@ -397,16 +401,35 @@ implementation. The timeout message is defined in the getSessionTimeoutMessage f
 
 ## Message Handling Flow
 
+The bot offers two message processing flows, controlled by the `handlersFirst` configuration option:
+
+#### Default Flow (handlersFirst: false)
+
 1. Bot receives message
-2. Gets or creates session for chat ID
-3. If no current state, enters default state
-4. Current state's onMessage handler processes message
-5. Based on return value:
-    - If null: Global handlers process message (onText, onType, onRegex)
-    - If undefined: Stop processing
+2. Current state's `onMessage` handler processes message
+3. Based on return value:
+    - If `null`: Global handlers process message (onText, onType, onRegex)
+    - If `undefined`: Stop processing
     - If state name/transition: Enter new state
 
-## Message Handling Priority
+#### Handlers-First Flow (handlersFirst: true)
+
+1. Bot receives message
+2. Global handlers (onText, onRegex, onType) process message
+    - If a handler returns `true`, continue to state processing
+    - If a handler returns anything else, stop processing
+3. If previous global handler returned `true`, current state's `onMessage` handler processes it
+
+### Handler Return Values
+
+When using the handlers-first approach (`handlersFirst: true`), global message handlers support an additional return
+value:
+
+- undefined: Message was handled, stop processing (default)
+- true: Message was partially handled, continue to state processing
+- anything else: Treat as undefined (stop processing)
+
+## Message Handling Priority (if handlersFirst: false)
 
 Messages are processed in a specific priority order:
 
@@ -436,6 +459,35 @@ Messages are processed in a specific priority order:
 
 This means that if your state's `onMessage` handler returns `undefined` (the default return value), global handlers will
 never run. Make sure to return `null` if you want to allow global handlers to process the message.
+
+### Examples of using handlersFirst
+
+#### Configuring the Flow Order
+
+```typescript
+const bot = new WhatsAppBot({
+	idInstance: "your-instance-id",
+	apiTokenInstance: "your-token",
+	defaultState: "menu",
+	handlersFirst: true // Process global handlers before state handlers
+});
+```
+
+#### Handlers with Different Return Values
+
+```typescript
+// Handler that fully processes the message (stops further processing)
+bot.onText("/help", async (message) => {
+	await bot.sendText(message.chatId, "Here's the help information...");
+	// No explicit return - defaults to undefined (stop processing)
+});
+
+// Handler that partially processes the message and continues to state handler
+bot.onType("location", async (message) => {
+	await bot.sendText(message.chatId, "I've received your location...");
+	return true; // Continue to state processing for additional handling
+});
+```
 
 ## Global Handlers
 

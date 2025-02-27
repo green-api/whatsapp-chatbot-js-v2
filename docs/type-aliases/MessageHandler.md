@@ -6,11 +6,11 @@
 
 # Type Alias: MessageHandler()\<T\>
 
-> **MessageHandler**\<`T`\>: (`message`, `session`) => `Promise`\<`void`\>
+> **MessageHandler**\<`T`\>: (`message`, `session`) => `Promise`\<`void` \| `boolean`\>
 
-Defined in: [src/types/index.ts:96](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/6c0c4f4b360c7e87dd13e91d54244d90d03a5549/src/types/index.ts#L96)
+Defined in: [src/types/index.ts:125](https://github.com/green-api/whatsapp-chatbot-js-v2/blob/c30756ad4732aa30584821f7e49dc15f946b6a2a/src/types/index.ts#L125)
 
-Function type for handling messages.
+Function type for handling messages. Return true if handlersFirst config is set to "true" and you want to continue with the onMessage
 
 ## Type Parameters
 
@@ -30,4 +30,4 @@ Type of custom state data
 
 ## Returns
 
-`Promise`\<`void`\>
+`Promise`\<`void` \| `boolean`\>
