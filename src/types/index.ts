@@ -24,6 +24,8 @@ export interface BotConfig<T = any> {
 	settings?: Partial<Settings.Settings>;
 	/** Whether to clear webhook notification queue on bot startup. Default: false. */
 	clearWebhookQueueOnStart?: boolean;
+	/** Controls message processing flow, allows handlers to be processed before onMessage. Default: false */
+	handlersFirst?: boolean;
 }
 
 /**
@@ -117,10 +119,10 @@ export type MessageType =
 	| "pollUpdate";
 
 /**
- * Function type for handling messages.
+ * Function type for handling messages. Return true if handlersFirst config is set to "true" and you want to continue with the onMessage
  * @typeParam T - Type of custom state data
  */
-export type MessageHandler<T = any> = (message: Message, session: SessionData<T>) => Promise<void>;
+export type MessageHandler<T = any> = (message: Message, session: SessionData<T>) => Promise<void | boolean>;
 
 /**
  * Represents a state transition with optional data.

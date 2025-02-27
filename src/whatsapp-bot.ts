@@ -57,9 +57,13 @@ export class WhatsAppBot<T = any> {
 	private readonly defaultState: string;
 	/** Command to trigger back navigation */
 	private readonly backCommands: string | string[];
+	/** Instance settings */
 	private readonly settings: Partial<Settings.Settings>;
 	public wid?: string;
+	/** Whether to clear webhook queue on start. Default: false */
 	private readonly clearWebhookQueueOnStart: boolean;
+	/** Controls message processing flow, allows handlers to be processed before onMessage. Default: false */
+	handlersFirst?: boolean;
 
 	/**
 	 * Creates a new WhatsApp bot instance.
@@ -111,6 +115,7 @@ export class WhatsAppBot<T = any> {
 			deletedMessageWebhook: "no",
 		};
 		this.clearWebhookQueueOnStart = config.clearWebhookQueueOnStart ?? false;
+		this.handlersFirst = config.handlersFirst ?? false;
 
 		this.backCommands.forEach(command => {
 			this.onText(command, async (message, session) => {
@@ -210,14 +215,21 @@ export class WhatsAppBot<T = any> {
 
 	private async handleMessage(message: Message, session: SessionData<T>): Promise<void> {
 		let shouldContinueToHandlers = true;
+		let shouldContinueToState = true;
+		let handlersAlreadyRun = false;
 
-		if (session.currentState) {
+		if (this.handlersFirst) {
+			handlersAlreadyRun = true;
+			shouldContinueToState = await this.processGlobalHandlers(message, session);
+		}
+
+		if (shouldContinueToState && session.currentState) {
 			const state = this.states.get(session.currentState);
 			if (state) {
 				const result = await state.onMessage(message, session.stateData);
 
 				if (result === null) {
-					shouldContinueToHandlers = true;
+					shouldContinueToHandlers = !handlersAlreadyRun;
 				} else if (result === undefined) {
 					shouldContinueToHandlers = false;
 				} else if (typeof result === "string") {
@@ -230,33 +242,52 @@ export class WhatsAppBot<T = any> {
 			}
 		}
 
-		if (shouldContinueToHandlers) {
-			if (message.text) {
-				const lowerText = message.text.toLowerCase();
-				const textHandler = this.textHandlers.get(lowerText);
-				if (textHandler) {
-					await textHandler(message, session);
-					return;
-				}
+		if (shouldContinueToHandlers && !handlersAlreadyRun) {
+			await this.processGlobalHandlers(message, session);
+		}
+	}
 
+	private async processGlobalHandlers(message: Message, session: SessionData<T>): Promise<boolean> {
+		let continueToState = true;
+		let handlerProcessed = false;
+
+		if (message.text) {
+			const lowerText = message.text.toLowerCase();
+			const textHandler = this.textHandlers.get(lowerText);
+			if (textHandler) {
+				handlerProcessed = true;
+				const result = await textHandler(message, session);
+				continueToState = result === true;
+			}
+
+			if (!handlerProcessed) {
 				for (const {pattern, handler} of this.regexHandlers) {
 					if (pattern.test(message.text)) {
-						await handler(message, session);
-						return;
+						handlerProcessed = true;
+						const result = await handler(message, session);
+						continueToState = result === true;
+						break;
 					}
 				}
 			}
+		}
 
+		if (!handlerProcessed) {
 			const typeHandlers = [
 				...(this.typeHandlers.get(message.type) || []),
 				...(this.typeHandlers.get("*") || []),
 			];
 
 			if (typeHandlers.length > 0) {
-				await typeHandlers[0](message, session);
-				return;
+				handlerProcessed = true;
+				const result = await typeHandlers[0](message, session);
+				continueToState = result === true;
 			}
 		}
+
+		// Return true if we should continue to state processing,
+		// false if we should stop here
+		return !handlerProcessed || continueToState;
 	}
 
 	/**
