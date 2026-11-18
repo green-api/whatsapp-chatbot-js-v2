@@ -119,6 +119,9 @@ interface BotConfig<T = any> {
 	/** Controls message processing order. When true, global handlers run before state handlers (onMessage).
 	 * When false (default), state handlers run first. */
 	handlersFirst?: boolean;
+
+	/** Options of the calls connection (bot.calls), for example { pcmSampleRate: 16000 } for realtime audio */
+	calls?: CallsConnectionOptions;
 }
 ```
 
@@ -199,6 +202,34 @@ bot.onType("image", async (message) => {
 	await bot.sendText(message.chatId, "Image received!");
 });
 ```
+
+### Calls
+
+Voice calls with WhatsApp users, on plans that include calls. `bot.onCall` receives call notifications: incoming and
+outgoing calls, answers, ends, declined and missed calls. With the default settings the bot turns these notifications on
+itself.
+
+```typescript
+bot.onCall(async (call) => {
+	if (call.direction === "incoming" && call.status === "offer") {
+		await bot.acceptCall();
+		const calls = await bot.connectCalls();
+		await calls.startAudioBridge();
+		await calls.play("./greeting.ogg");
+		await bot.hangUp();
+	}
+});
+
+const callId = await bot.call("79001234567@c.us");
+```
+
+- `bot.call(chatId)`, `bot.acceptCall()`, `bot.rejectCall()` and `bot.hangUp()` control the call. Outgoing calls work
+  only to chats that wrote or called in the last 72 hours.
+- `await bot.connectCalls()` returns the calls connection of
+  [@green-api/whatsapp-api-client-js-v2](https://github.com/green-api/whatsapp-api-client-js-v2) for the call audio:
+  `play()` for audio files, `sendPcm()` and the `remote-pcm` event for realtime audio in both directions. Audio needs
+  `npm install werift@^0.25.2 ws`, realtime audio also `npm install opusscript`.
+- Call handlers run alongside message processing, so a long call does not hold up messages.
 
 ### Storage
 
@@ -705,6 +736,10 @@ await bot.sendFile(chatId, {
 
 See `examples/tickets.ts` for a complete example of a support ticket system demonstrating state
 management, file handling, and complex conversation flows.
+
+### Calls Bot
+
+See `examples/calls.ts` for a bot that answers incoming calls with a greeting and calls back on "call me".
 
 ### Custom Storage Implementation
 

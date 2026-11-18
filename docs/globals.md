@@ -13,6 +13,7 @@
 ## Interfaces
 
 - [BotConfig](interfaces/BotConfig.md)
+- [CallEvent](interfaces/CallEvent.md)
 - [Message](interfaces/Message.md)
 - [SessionData](interfaces/SessionData.md)
 - [State](interfaces/State.md)
@@ -22,5 +23,8 @@
 
 ## Type Aliases
 
+- [CallDirection](type-aliases/CallDirection.md)
+- [CallEventStatus](type-aliases/CallEventStatus.md)
+- [CallHandler](type-aliases/CallHandler.md)
 - [MessageHandler](type-aliases/MessageHandler.md)
 - [MessageType](type-aliases/MessageType.md)
