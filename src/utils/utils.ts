@@ -1,36 +1,29 @@
-export function formatAxiosError(error: any) {
-	if (error.response) {
-		const errorData = error.response.data;
+import { File as NodeFile } from "node:buffer";
+import { promises as fs } from "node:fs";
+import { basename } from "node:path";
+import { lookup } from "mime-types";
+import { GreenApiError } from "@green-api/whatsapp-api-client-js-v2";
+import { DEFAULT_UPLOAD_MIME_TYPE } from "../defaults";
 
+export function formatError(error: unknown) {
+	if (error instanceof GreenApiError) {
 		return {
-			status: error.response.status,
-			statusText: error.response.statusText,
-			message: typeof errorData === "string" ? errorData :
-				errorData?.message ||
-				errorData?.error?.message ||
-				errorData?.error ||
-				errorData?.description ||
-				JSON.stringify(errorData) ||
-				"No error message provided",
-			path: error.response.config?.url,
-			data: errorData,
-			headers: error.response.headers,
+			status: error.statusCode,
+			message: error.message,
+			data: error.response,
 		};
-	} else if (error.request) {
+	}
+	if (error instanceof Error) {
 		return {
-			error: "No response received",
-			message: error.message || "The server did not respond to the request",
-			request: {
-				method: error.request.method,
-				path: error.request.path,
-				host: error.request.host,
-			},
-		};
-	} else {
-		return {
-			error: "Request setup failed",
 			message: error.message,
 			stack: error.stack,
 		};
 	}
+	return {message: String(error)};
+}
+
+export async function readUploadFile(filePath: string, fileName?: string): Promise<File> {
+	const name = fileName || basename(filePath);
+	const data = await fs.readFile(filePath);
+	return new NodeFile([data], name, {type: lookup(name) || DEFAULT_UPLOAD_MIME_TYPE}) as unknown as File;
 }

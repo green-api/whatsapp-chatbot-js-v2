@@ -1,5 +1,5 @@
 import { Message, MessageType } from "../types";
-import { WebhookResponse } from "@green-api/whatsapp-api-client";
+import { MessageWebhook, WebhookMessageData } from "@green-api/whatsapp-api-client-js-v2";
 import debug from "debug";
 
 /**
@@ -8,7 +8,7 @@ import debug from "debug";
  * @param notification - The webhook notification received from WhatsApp API
  * @returns A standardized Message object containing the parsed message data
  */
-export function parseMessage(notification: WebhookResponse.MessageWebhook): Message {
+export function parseMessage(notification: MessageWebhook): Message {
 	const messageData = notification.messageData;
 	const message: Message = {
 		type: getMessageType(messageData),
@@ -71,7 +71,7 @@ export function parseMessage(notification: WebhookResponse.MessageWebhook): Mess
  *
  * @internal
  */
-function getMessageType(messageData: WebhookResponse.MessageData): MessageType {
+function getMessageType(messageData: WebhookMessageData): MessageType {
 	switch (messageData.typeMessage) {
 		case "imageMessage":
 			return "image";

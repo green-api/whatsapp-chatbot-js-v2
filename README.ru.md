@@ -115,6 +115,9 @@ interface BotConfig<T = any> {
 	/** Управляет порядком обработки сообщений. При значении true, глобальные обработчики запускаются
 	 * перед обработчиком состояний (onMessage). При значении false (по умолчанию), сначала запускается обработчик состояний. */
 	handlersFirst?: boolean;
+
+	/** Настройки соединения звонков (bot.calls), например { pcmSampleRate: 16000 } для звука в реальном времени */
+	calls?: CallsConnectionOptions;
 }
 ```
 
@@ -195,6 +198,34 @@ bot.onType("image", async (message) => {
 	await bot.sendText(message.chatId, "Изображение получено!");
 });
 ```
+
+### Звонки
+
+Голосовые звонки с пользователями WhatsApp, на тарифах со звонками. `bot.onCall` получает уведомления о звонках:
+входящие и исходящие звонки, ответ, завершение, отклонённые и пропущенные звонки. С настройками по умолчанию бот сам
+включает эти уведомления.
+
+```typescript
+bot.onCall(async (call) => {
+	if (call.direction === "incoming" && call.status === "offer") {
+		await bot.acceptCall();
+		const calls = await bot.connectCalls();
+		await calls.startAudioBridge();
+		await calls.play("./greeting.ogg");
+		await bot.hangUp();
+	}
+});
+
+const callId = await bot.call("79001234567@c.us");
+```
+
+- `bot.call(chatId)`, `bot.acceptCall()`, `bot.rejectCall()` и `bot.hangUp()` управляют звонком. Исходящие звонки
+  работают только в чаты, которые писали или звонили за последние 72 часа.
+- `await bot.connectCalls()` возвращает соединение звонков из
+  [@green-api/whatsapp-api-client-js-v2](https://github.com/green-api/whatsapp-api-client-js-v2) для звука звонка:
+  `play()` для аудиофайлов, `sendPcm()` и событие `remote-pcm` для звука в реальном времени в обе стороны. Для звука
+  нужно `npm install werift@^0.25.2 ws`, для звука в реальном времени ещё `npm install opusscript`.
+- Обработчики звонков работают параллельно с обработкой сообщений, поэтому долгий звонок не задерживает сообщения.
 
 ### Хранилище
 
@@ -706,6 +737,10 @@ await bot.sendFile(chatId, {
 
 Смотрите `examples/tickets.ts` для полного примера системы тикетов поддержки, демонстрирующего
 управление состояниями, обработку файлов и сложные потоки диалогов.
+
+### Бот для звонков
+
+Смотрите `examples/calls.ts`: бот отвечает на входящие звонки приветствием и перезванивает по сообщению "call me".
 
 ### Реализация пользовательского хранилища
 

@@ -1,11 +1,28 @@
-import { API, restAPI, Settings, WebhookResponse } from "@green-api/whatsapp-api-client";
-import { BotConfig, Message, MessageHandler, MessageType, SessionData, State, StorageAdapter } from "./types";
+import {
+	CallsConnection,
+	CallsConnectionOptions,
+	GreenApiClient,
+	isCallWebhook,
+	ReceiveNotificationResponse,
+	Settings,
+} from "@green-api/whatsapp-api-client-js-v2";
+import {
+	BotConfig,
+	CallEvent,
+	CallHandler,
+	Message,
+	MessageHandler,
+	MessageType,
+	SessionData,
+	State,
+	StorageAdapter,
+} from "./types";
 import { MemoryStorage } from "./storage/memory";
 import { parseMessage } from "./parser/message-parser";
+import { parseCall } from "./parser/call-parser";
 import debugFactory from "debug";
-import { formatAxiosError } from "./utils/utils";
-import * as fs from "node:fs";
-import FormData from "form-data";
+import { formatError, readUploadFile } from "./utils/utils";
+import { CALL_WEBHOOK_SETTINGS } from "./defaults";
 
 const debug = debugFactory("@green-api/whatsapp-bot");
 
@@ -35,8 +52,8 @@ const debug = debugFactory("@green-api/whatsapp-bot");
  * ```
  */
 export class WhatsAppBot<T = any> {
-	/** Green API client instance */
-	public api: API;
+	/** GREEN-API client instance (@green-api/whatsapp-api-client-js-v2) */
+	public api: GreenApiClient;
 	/** Storage adapter for session management */
 	protected readonly storage: StorageAdapter<T>;
 	/** Map of message type handlers */
@@ -58,12 +75,22 @@ export class WhatsAppBot<T = any> {
 	/** Command to trigger back navigation */
 	private readonly backCommands: string | string[];
 	/** Instance settings */
-	private readonly settings: Partial<Settings.Settings>;
+	private readonly settings: Partial<Settings>;
 	public wid?: string;
 	/** Whether to clear webhook queue on start. Default: false */
 	private readonly clearWebhookQueueOnStart: boolean;
 	/** Controls message processing flow, allows handlers to be processed before onMessage. Default: false */
 	handlersFirst?: boolean;
+	/** Call notification handlers */
+	private callHandlers: CallHandler[] = [];
+	/** Whether the settings came from the config */
+	private readonly customSettings: boolean;
+	/** Options of the calls connection */
+	private readonly callsOptions?: CallsConnectionOptions;
+	/** Calls connection, created on first use */
+	private callsConnection?: CallsConnection;
+	/** Opening of the calls connection */
+	private callsOpening?: Promise<CallsConnection>;
 
 	/**
 	 * Creates a new WhatsApp bot instance.
@@ -71,8 +98,8 @@ export class WhatsAppBot<T = any> {
 	 * @param config - Bot configuration options
 	 */
 	constructor(config: BotConfig<T>) {
-		this.api = restAPI({
-			idInstance: config.idInstance,
+		this.api = new GreenApiClient({
+			idInstance: Number(config.idInstance),
 			apiTokenInstance: config.apiTokenInstance,
 		});
 		this.sessionTimeout = config.sessionTimeout || 300;
@@ -114,6 +141,8 @@ export class WhatsAppBot<T = any> {
 			editedMessageWebhook: "no",
 			deletedMessageWebhook: "no",
 		};
+		this.customSettings = config.settings !== undefined;
+		this.callsOptions = config.calls;
 		this.clearWebhookQueueOnStart = config.clearWebhookQueueOnStart ?? false;
 		this.handlersFirst = config.handlersFirst ?? false;
 
@@ -131,12 +160,12 @@ export class WhatsAppBot<T = any> {
 	private async clearWebhookQueue(): Promise<void> {
 		debug("Clearing webhook queue...");
 		while (true) {
-			const notification = await this.api.webhookService.receiveNotification();
+			const notification = await this.api.receiveNotification();
 			if (!notification) {
 				debug("Queue is empty");
 				break;
 			}
-			await this.api.webhookService.deleteNotification(notification.receiptId);
+			await this.api.deleteNotification(notification.receiptId);
 			debug(`Deleted notification id: ${notification.receiptId}`);
 		}
 	}
@@ -338,6 +367,107 @@ export class WhatsAppBot<T = any> {
 	}
 
 	/**
+	 * Registers a handler for call notifications: incoming and outgoing calls, answers, ends, declines and missed calls.
+	 * Call handlers run alongside message processing, so playing audio in a call does not hold up messages.
+	 * With the default settings the bot turns on the call notifications when at least one call handler is registered.
+	 *
+	 * @param handler - Handler function to call for every call notification
+	 * @returns This bot instance for chaining
+	 *
+	 * @example
+	 * ```typescript
+	 * bot.onCall(async (call) => {
+	 *   if (call.direction === "incoming" && call.status === "offer") {
+	 *     await bot.rejectCall();
+	 *     await bot.sendText(call.chatId, "We can't take calls right now");
+	 *   }
+	 * });
+	 * ```
+	 */
+	onCall(handler: CallHandler): this {
+		this.callHandlers.push(handler);
+		return this;
+	}
+
+	/**
+	 * Starts an outgoing voice call. Outgoing calls work only to chats that wrote or called in the last 72 hours.
+	 *
+	 * @param chatId - Chat to call
+	 * @returns The call ID, the same as callId in call notifications
+	 */
+	async call(chatId: string): Promise<string> {
+		debug("Calling", {chatId});
+		return (await this.api.callsDial({chatId})).callId;
+	}
+
+	/**
+	 * Accepts the incoming call.
+	 *
+	 * @returns The call ID
+	 */
+	async acceptCall(): Promise<string> {
+		debug("Accepting the call");
+		return (await this.api.callsAccept()).callId;
+	}
+
+	/**
+	 * Rejects the incoming call.
+	 *
+	 * @returns The call ID
+	 */
+	async rejectCall(): Promise<string> {
+		debug("Rejecting the call");
+		return (await this.api.callsReject()).callId;
+	}
+
+	/**
+	 * Ends the current call.
+	 *
+	 * @returns The call ID
+	 */
+	async hangUp(): Promise<string> {
+		debug("Hanging up");
+		return (await this.api.callsHangUp()).callId;
+	}
+
+	/**
+	 * Calls connection of the instance for the call audio: play audio files, send and receive realtime audio.
+	 * Created on first use and not opened, use connectCalls() to get it open.
+	 * Audio needs the optional dependencies werift and ws, realtime audio also opusscript.
+	 */
+	get calls(): CallsConnection {
+		this.callsConnection ??= this.api.connectCalls(this.callsOptions);
+		return this.callsConnection;
+	}
+
+	/**
+	 * Opens the calls connection once and returns it.
+	 *
+	 * @returns The open calls connection
+	 *
+	 * @example
+	 * ```typescript
+	 * bot.onCall(async (call) => {
+	 *   if (call.direction === "incoming" && call.status === "offer") {
+	 *     const calls = await bot.connectCalls();
+	 *     await bot.acceptCall();
+	 *     await calls.startAudioBridge();
+	 *     await calls.play("./greeting.ogg");
+	 *     await bot.hangUp();
+	 *   }
+	 * });
+	 * ```
+	 */
+	async connectCalls(): Promise<CallsConnection> {
+		const calls = this.calls;
+		this.callsOpening ??= calls.open().then(() => calls, (error) => {
+			this.callsOpening = undefined;
+			throw error;
+		});
+		return this.callsOpening;
+	}
+
+	/**
 	 * Sends a text message to a chat.
 	 *
 	 * @param chatId - Target chat ID
@@ -352,7 +482,7 @@ export class WhatsAppBot<T = any> {
 	}): Promise<any> {
 		const linkPreview = options?.linkPreview ?? true;
 		debug("Sending text", {chatId, text, linkPreview, quotedMessageId: options?.quotedMessageId});
-		return this.api.message.sendMessage(chatId, null, text, options?.quotedMessageId, linkPreview);
+		return this.api.sendMessage({chatId, message: text, quotedMessageId: options?.quotedMessageId, linkPreview});
 	}
 
 	/**
@@ -369,14 +499,13 @@ export class WhatsAppBot<T = any> {
 	}): Promise<any> {
 		debug("Sending poll", {chatId, options});
 		const formattedOptions = options.options.map(optionName => ({optionName}));
-		return this.api.message.sendPoll(
+		return this.api.sendPoll({
 			chatId,
-			null,
-			options.question,
-			formattedOptions,
-			options.multipleAnswers,
-			options.quotedMessageId,
-		);
+			message: options.question,
+			options: formattedOptions,
+			multipleAnswers: options.multipleAnswers,
+			quotedMessageId: options.quotedMessageId,
+		});
 	}
 
 	/**
@@ -393,16 +522,16 @@ export class WhatsAppBot<T = any> {
 		middleName?: string;
 	}): Promise<any> {
 		debug("Sending contact", {chatId, contact});
-
-		const apiContact = {
-			phoneContact: contact.phoneContact,
-			firstName: contact.firstName ?? null,
-			lastName: contact.lastName ?? null,
-			company: contact.company ?? null,
-			middleName: contact.middleName ?? null,
-		};
-
-		return this.api.message.sendContact(chatId, null, apiContact);
+		return this.api.sendContact({
+			chatId,
+			contact: {
+				phoneContact: contact.phoneContact,
+				firstName: contact.firstName,
+				lastName: contact.lastName,
+				company: contact.company,
+				middleName: contact.middleName,
+			},
+		});
 	}
 
 	/**
@@ -417,7 +546,7 @@ export class WhatsAppBot<T = any> {
 		caption?: string;
 	}): Promise<any> {
 		debug("Sending file", {chatId, options});
-		return this.api.file.sendFileByUrl(chatId, null, options.url, options.fileName, options.caption);
+		return this.api.sendFileByUrl({chatId, file: {url: options.url, fileName: options.fileName}, caption: options.caption});
 	}
 
 	/**
@@ -433,22 +562,13 @@ export class WhatsAppBot<T = any> {
 		quotedMessageId?: string;
 	}): Promise<any> {
 		debug("Sending file by upload", {chatId, options});
-		const formData = new FormData();
-
-		formData.append("chatId", chatId);
-		formData.append("file", fs.createReadStream(options.filePath));
-
-		if (options.fileName) {
-			formData.append("fileName", options.fileName);
-		}
-		if (options.caption) {
-			formData.append("caption", options.caption);
-		}
-		if (options.quotedMessageId) {
-			formData.append("quotedMessageId", options.quotedMessageId);
-		}
-
-		return this.api.file.sendFileByUpload(formData as any);
+		const file = await readUploadFile(options.filePath, options.fileName);
+		return this.api.sendFileByUpload({
+			chatId,
+			file: {data: file, fileName: file.name},
+			caption: options.caption,
+			quotedMessageId: options.quotedMessageId,
+		});
 	}
 
 	/**
@@ -464,14 +584,13 @@ export class WhatsAppBot<T = any> {
 		address?: string;
 	}): Promise<any> {
 		debug("Sending location", {chatId, location});
-		return this.api.message.sendLocation(
+		return this.api.sendLocation({
 			chatId,
-			null,
-			location.name || "",
-			location.address || "",
-			location.latitude,
-			location.longitude,
-		);
+			nameLocation: location.name || "",
+			address: location.address || "",
+			latitude: location.latitude,
+			longitude: location.longitude,
+		});
 	}
 
 	/**
@@ -484,20 +603,21 @@ export class WhatsAppBot<T = any> {
 		debug("Starting bot initialization");
 
 		try {
-			const settings = await this.api.settings.getSettings();
+			const settings = await this.api.getSettings();
 			if (!settings.wid) {
 				throw new Error("Failed to get bot WID from settings");
 			}
 
 			this.wid = settings.wid;
-			await this.api.settings.setSettings(this.settings);
+			const withCalls = this.callHandlers.length > 0 && !this.customSettings;
+			await this.api.setSettings(withCalls ? {...this.settings, ...CALL_WEBHOOK_SETTINGS} : this.settings);
 			debug("Settings configuration initiated - they may take several minutes to apply");
 			if (this.clearWebhookQueueOnStart) {
 				debug("Clearing the webhook queue");
 				await this.clearWebhookQueue();
 			}
 		} catch (error: any) {
-			const formattedError = formatAxiosError(error);
+			const formattedError = formatError(error);
 			debug("Error during settings configuration:", formattedError);
 			throw new Error(`Failed to configure settings: ${JSON.stringify(formattedError)}`);
 		}
@@ -512,20 +632,20 @@ export class WhatsAppBot<T = any> {
 			let hadError = false;
 
 			try {
-				notification = await this.api.webhookService.receiveNotification();
+				notification = await this.api.receiveNotification();
 				if (notification) {
 					debug(notification);
 					await this.handleNotification(notification);
 				}
 			} catch (error: any) {
 				hadError = true;
-				debug("Error while handling notifications, will retry in 10 seconds:", formatAxiosError(error));
+				debug("Error while handling notifications, will retry in 10 seconds:", formatError(error));
 			} finally {
 				if (notification) {
 					try {
-						await this.api.webhookService.deleteNotification(notification.receiptId);
+						await this.api.deleteNotification(notification.receiptId);
 					} catch (deleteError: any) {
-						debug("Failed to delete notification:", formatAxiosError(deleteError));
+						debug("Failed to delete notification:", formatError(deleteError));
 					}
 				}
 			}
@@ -540,6 +660,9 @@ export class WhatsAppBot<T = any> {
 	stop(): void {
 		debug("Stopping bot");
 		this.isRunning = false;
+		this.callsConnection?.close();
+		this.callsConnection = undefined;
+		this.callsOpening = undefined;
 		if (this.storage instanceof MemoryStorage) {
 			(this.storage as MemoryStorage<T>).stopCleanup();
 		}
@@ -559,12 +682,19 @@ export class WhatsAppBot<T = any> {
 	 * @param notification - Webhook notification from WhatsApp
 	 * @internal
 	 */
-	private async handleNotification(notification: WebhookResponse.Notification): Promise<void> {
-		if (notification.body.typeWebhook !== "incomingMessageReceived") {
+	private async handleNotification(notification: ReceiveNotificationResponse): Promise<void> {
+		const body = notification.body;
+		if (isCallWebhook(body)) {
+			if (this.callHandlers.length > 0) {
+				void this.handleCall(parseCall(body));
+			}
+			return;
+		}
+		if (body.typeWebhook !== "incomingMessageReceived") {
 			return;
 		}
 
-		const message = parseMessage(notification.body);
+		const message = parseMessage(body);
 		const session = await this.getOrCreateSession(message.chatId);
 
 		if (!session.currentState) {
@@ -573,6 +703,23 @@ export class WhatsAppBot<T = any> {
 		}
 
 		await this.handleMessage(message, session);
+	}
+
+	/**
+	 * Runs the call handlers for a call notification, one after another.
+	 *
+	 * @param call - The call event
+	 * @internal
+	 */
+	private async handleCall(call: CallEvent): Promise<void> {
+		debug("Call notification", {callId: call.callId, direction: call.direction, status: call.status});
+		for (const handler of this.callHandlers) {
+			try {
+				await handler(call);
+			} catch (error) {
+				console.error("Error in call handler:", formatError(error));
+			}
+		}
 	}
 
 	/**

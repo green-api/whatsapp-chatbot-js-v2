@@ -1,4 +1,4 @@
-import { Settings } from "@green-api/whatsapp-api-client";
+import { CallsConnectionOptions, CallWebhook, Settings } from "@green-api/whatsapp-api-client-js-v2";
 import { StorageEventEmitter } from "../storage/events";
 
 /**
@@ -21,12 +21,54 @@ export interface BotConfig<T = any> {
 	/** Command text to trigger back navigation */
 	backCommands?: string | string[];
 	/** Custom settings. If not provided, default settings are used */
-	settings?: Partial<Settings.Settings>;
+	settings?: Partial<Settings>;
 	/** Whether to clear webhook notification queue on bot startup. Default: false. */
 	clearWebhookQueueOnStart?: boolean;
 	/** Controls message processing flow, allows handlers to be processed before onMessage. Default: false */
 	handlersFirst?: boolean;
+	/** Options of the calls connection (bot.calls), for example the PCM sample rate of realtime audio */
+	calls?: CallsConnectionOptions;
 }
+
+/** Direction of a call */
+export type CallDirection = "incoming" | "outgoing";
+
+/**
+ * Status of a call notification: offer (ringing), pickUp (answered), hangUp (ended after an answer),
+ * declined, missed or invalid. For incoming calls declined means the caller cancelled before the answer.
+ */
+export type CallEventStatus = "offer" | "pickUp" | "hangUp" | "declined" | "missed" | "invalid";
+
+/**
+ * A call notification from WhatsApp.
+ */
+export interface CallEvent {
+	/** Call ID, the same as returned by bot.call */
+	callId: string;
+	/** Chat of the other side */
+	chatId: string;
+	/** Whether the call is incoming or outgoing */
+	direction: CallDirection;
+	/** Call status */
+	status: CallEventStatus;
+	/** Whether this notification ends the call */
+	ended: boolean;
+	/** Call duration in seconds, set when the call ends */
+	durationSeconds: number;
+	/** Whether it is a video call */
+	isVideo: boolean;
+	/** Whether the call was started, answered or ended through the API */
+	byApi: boolean;
+	/** Notification timestamp */
+	timestamp: number;
+	/** Original webhook notification data */
+	raw: CallWebhook;
+}
+
+/**
+ * Function type for handling call notifications.
+ */
+export type CallHandler = (call: CallEvent) => Promise<void> | void;
 
 /**
  * Represents a normalized message from WhatsApp.
